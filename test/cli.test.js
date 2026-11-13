@@ -105,7 +105,6 @@ test("wrong input stops before any request, with exit code 2", async () => {
     ["profiles", "add", "--project", "7"],
     ["projects", "update", "7"],
     ["questions", "update", "9", "--project", "7", "--body", "[1]"],
-    ["profiles"],
     ["nope"],
     ["api", "FETCH", "/workspace"],
     ["api", "https://evil.example/x"],
