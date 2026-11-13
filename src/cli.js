@@ -5,7 +5,7 @@ import { apiKey, baseUrl, checkKey, KEYS_URL, projectSetting, removeKey, saveKey
 import { ApiError, UsageError } from "./errors.js";
 import { commandHelp, group, overview, usage } from "./help.js";
 import { request } from "./http.js";
-import { clean, render } from "./output.js";
+import { clean, json, render } from "./output.js";
 import { commands, GLOBALS, VERSION } from "./spec.js";
 
 const SETUP_LIMIT_MS = 10 * 60_000;
@@ -104,7 +104,7 @@ export async function run(argv, io = realIo()) {
     const wrongCommand = e instanceof UsageError;
     if (argv.includes("--json")) {
       const body = e instanceof ApiError && e.body ? e.body : { error: { code: wrongCommand ? "usage" : "network", message: e.message } };
-      io.note(JSON.stringify(body, null, 2));
+      io.note(json(body));
     } else {
       io.note(`Error: ${clean(e.message)}`);
       if (e instanceof ApiError && e.code) io.note(clean(`Code: ${e.code}${e.requestId ? `. Request ID: ${e.requestId}` : ""}`));
@@ -171,7 +171,7 @@ async function api(client, args, values, io) {
   const key = str(values["idempotency-key"]);
   const body = values.body === undefined ? undefined : await readBody(str(values.body), io);
   const reply = await request(client, method, path, { body, headers: key ? { "Idempotency-Key": key } : {} });
-  if (reply.body !== null) io.out(JSON.stringify(reply.body, null, 2));
+  if (reply.body !== null) io.out(json(reply.body));
 }
 
 /**
@@ -271,10 +271,10 @@ async function execute(client, cmd, args, values, io) {
   show(reply.body, values.json, io);
 }
 
-/** @param {any} body @param {boolean} json @param {Io} io */
-function show(body, json, io) {
-  if (body === null) return json ? undefined : io.note("Done.");
-  if (json) return io.out(JSON.stringify(body, null, 2));
+/** @param {any} body @param {boolean} asJson @param {Io} io */
+function show(body, asJson, io) {
+  if (body === null) return asJson ? undefined : io.note("Done.");
+  if (asJson) return io.out(json(body));
   const text = render(body, io);
   if (text) io.out(text);
   if (body.message) io.note(clean(body.message));

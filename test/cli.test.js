@@ -207,6 +207,9 @@ test("an API error prints its message, code, and request ID, with exit code 1", 
 test("a reply that is not JSON, or no reply, is an error with exit code 1", async () => {
   const html = await cli(["whoami"], { answer: () => ({ status: 502 }) });
   assert.deepEqual([html.code, html.err], [1, "Error: The API answered with status 502."]);
+  const portal = await cli(["projects", "--all"], { answer: () => ({ body: "<html>Sign in to this network</html>" }) });
+  assert.equal(portal.code, 1);
+  assert.match(portal.err, /not from the Frontmost API/);
 });
 
 test("--json prints the API reply unchanged", async () => {
@@ -236,6 +239,10 @@ test("text from the API cannot send control codes to the terminal", async () => 
   assert.equal(r.out, "NAME     NOTE\n[2JAcme  two lines");
   const e = await cli(["whoami"], { answer: () => ({ status: 400, body: { error: { code: "x\u001b[31m", message: "bad\u001b[0m" } } }) });
   assert.ok(!e.err.includes("\u001b"));
+  const body = { object: "workspace", name: "A\u001b[2J\u009b31m\u202ecme" };
+  const j = await cli(["whoami", "--json"], { answer: () => ({ body }) });
+  assert.ok(!/[\u001b\u009b\u202e]/.test(j.out));
+  assert.deepEqual(JSON.parse(j.out), body);
 });
 
 test("api calls any route and prints JSON", async () => {

@@ -6,6 +6,8 @@ const MAX_CELL = 48;
 
 /** @param {unknown} text */
 export const clean = (text) => String(text).replace(UNSAFE, "");
+/** JSON text with the same values, and with each unsafe character written as \\uXXXX. @param {unknown} value */
+export const json = (value) => JSON.stringify(value, null, 2).replace(UNSAFE, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 /** @param {unknown} text */
 const oneLine = (text) => clean(text).replace(/\s+/g, " ").trim();
 
@@ -77,6 +79,6 @@ export function record(obj, view) {
  * @param {any} body @param {{ tty: boolean, width?: number }} view
  */
 export function render(body, view) {
-  if (body?.object !== "list") return isObject(body) ? record(body, view) : clean(JSON.stringify(body));
+  if (body?.object !== "list") return isObject(body) ? record(body, view) : json(body);
   return body.data.length ? table(body.data, view) : "";
 }

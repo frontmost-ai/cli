@@ -21,6 +21,7 @@ export async function request(client, method, path, options = {}, retried = fals
   for (const [k, v] of Object.entries(options.query ?? {})) url.searchParams.set(k, v);
 
   let res;
+  let text;
   try {
     res = await client.fetch(url, {
       method,
@@ -35,6 +36,7 @@ export async function request(client, method, path, options = {}, retried = fals
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     });
+    text = await res.text();
   } catch (cause) {
     const timedOut = cause instanceof Error && cause.name === "TimeoutError";
     throw new ApiError(timedOut ? "The API did not answer in 60 seconds. Try again." : `Could not reach ${url.host}. Check the network, then try again.`);
@@ -48,16 +50,17 @@ export async function request(client, method, path, options = {}, retried = fals
     }
   }
 
-  const text = await res.text();
   let body = null;
   try {
     if (text) body = JSON.parse(text);
   } catch {
-    // Not JSON. Only an error reply from outside the API has such a body.
+    // Not JSON. Reported below.
   }
   if (!res.ok) {
     const error = body?.error ?? {};
     throw new ApiError(error.message ?? `The API answered with status ${res.status}.`, { code: error.code, request_id: error.request_id, body });
   }
+  // A proxy or a sign-in page of the network can answer in place of the API.
+  if (res.status !== 204 && (typeof body !== "object" || body === null)) throw new ApiError(`${url.host} sent a reply that is not from the Frontmost API. Check the network, then try again.`);
   return { status: res.status, body, headers: res.headers };
 }
