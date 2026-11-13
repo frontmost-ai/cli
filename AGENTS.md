@@ -30,8 +30,13 @@ Do not add an option, a field, or a command that the API does not have. Change t
 
 1. Set the new version in `package.json`. Use a minor version for new commands and a patch version for fixes.
 2. Commit, then `git tag v<version> && git push origin main v<version>`.
-3. In `frontmost-ai/homebrew-tap`, set `url` and `sha256` in `Formula/frontmost.rb` to the new tag. Get the hash with `curl -sL <url> | shasum -a 256`.
-4. Run `brew update && brew upgrade frontmost && frontmost --version`.
+3. In `frontmost-ai/homebrew-tap`, open a pull request that sets `url` and `sha256` in `Formula/frontmost.rb` to the new tag, and removes the `bottle do` block.
+   Get the hash with `curl -sL <url> | shasum -a 256`.
+4. Wait for the `brew test-bot` checks. They build the prebuilt packages.
+5. Run `gh workflow run publish.yml --repo frontmost-ai/homebrew-tap -f pull_request=<number>`. It publishes the packages and merges the change.
+6. Run `brew update && brew upgrade frontmost && frontmost --version`.
+
+Never push a formula change to the tap's `main` branch directly. A direct push ships no prebuilt package, and the install then needs Xcode tools.
 
 ## Checks before each push
 
