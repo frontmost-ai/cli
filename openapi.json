@@ -1,0 +1,2531 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Frontmost AI API",
+    "version": "1",
+    "description": "Read how AI apps answer your buyers' questions, and change the questions Frontmost AI asks."
+  },
+  "servers": [
+    {
+      "url": "https://app.frontmost.ai/api/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A workspace API key (fmk_\u2026) from the Team page, or an OAuth access token for this API."
+      }
+    }
+  },
+  "paths": {
+    "/workspace": {
+      "get": {
+        "summary": "The workspace's plan, limits, and use",
+        "operationId": "getWorkspace",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "List projects",
+        "operationId": "getProjects",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a project from a website, or continue a setup",
+        "operationId": "postProjects",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Required when the body has no setup_id. A new random string for each new request.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 253
+                  },
+                  "setup_id": {
+                    "type": "string",
+                    "pattern": "^\\d+$"
+                  },
+                  "country": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2
+                  },
+                  "language": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 8
+                  },
+                  "questions": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "minLength": 8,
+                          "maxLength": 500
+                        },
+                        "topic": {
+                          "type": "string",
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "The site read is still running. Send body.next after Retry-After seconds."
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "summary": "One project",
+        "operationId": "getProjectsId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Rename a project, or start or stop its daily scans",
+        "operationId": "patchProjectsId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "scanning": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/scans": {
+      "get": {
+        "summary": "Delivered scans, newest first",
+        "operationId": "getProjectsIdScans",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "delivered_after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/metrics": {
+      "get": {
+        "summary": "Visibility, Win Rate, Position, and Sentiment for one scope",
+        "operationId": "getProjectsIdMetrics",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "scan",
+              "type": "string",
+              "enum": [
+                "scan",
+                "week",
+                "month"
+              ]
+            }
+          },
+          {
+            "name": "app",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "questions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "branded",
+                "unbranded"
+              ]
+            }
+          },
+          {
+            "name": "compare_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "previous",
+              "type": "string",
+              "enum": [
+                "previous",
+                "none"
+              ]
+            }
+          },
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "app",
+                "scan"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/rivals": {
+      "get": {
+        "summary": "Rivals the answers named, most named first",
+        "operationId": "getProjectsIdRivals",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "scan",
+              "type": "string",
+              "enum": [
+                "scan",
+                "week",
+                "month"
+              ]
+            }
+          },
+          {
+            "name": "app",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "questions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "branded",
+                "unbranded"
+              ]
+            }
+          },
+          {
+            "name": "compare_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "previous",
+              "type": "string",
+              "enum": [
+                "previous",
+                "none"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/answers": {
+      "get": {
+        "summary": "Answers in scope, without their text",
+        "operationId": "getProjectsIdAnswers",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "scan",
+              "type": "string",
+              "enum": [
+                "scan",
+                "week",
+                "month"
+              ]
+            }
+          },
+          {
+            "name": "app",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "questions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "branded",
+                "unbranded"
+              ]
+            }
+          },
+          {
+            "name": "compare_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "previous",
+              "type": "string",
+              "enum": [
+                "previous",
+                "none"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          {
+            "name": "rival_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "named",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "cited_domain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/answers/{id}": {
+      "get": {
+        "summary": "One answer with its text and citations",
+        "operationId": "getAnswersId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/sources": {
+      "get": {
+        "summary": "Sites the answers cited, most cited first",
+        "operationId": "getProjectsIdSources",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "scan",
+              "type": "string",
+              "enum": [
+                "scan",
+                "week",
+                "month"
+              ]
+            }
+          },
+          {
+            "name": "app",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "questions",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "branded",
+                "unbranded"
+              ]
+            }
+          },
+          {
+            "name": "compare_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "previous",
+              "type": "string",
+              "enum": [
+                "previous",
+                "none"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/questions": {
+      "get": {
+        "summary": "The project's questions",
+        "operationId": "getProjectsIdQuestions",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add questions",
+        "operationId": "postProjectsIdQuestions",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "minItems": 1,
+                    "maxItems": 25,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "minLength": 8,
+                          "maxLength": 500
+                        },
+                        "topic": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 80
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "profile_id": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^\\d+$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "text"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/recommendations": {
+      "get": {
+        "summary": "The project's recommendations, open first",
+        "operationId": "getProjectsIdRecommendations",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "done",
+                "dismissed"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/questions/{question_id}": {
+      "patch": {
+        "summary": "Reword, move, pause, or resume a question",
+        "operationId": "patchProjectsIdQuestionsQuestion_id",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 500
+                  },
+                  "topic": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/profiles": {
+      "post": {
+        "summary": "Add a buyer profile",
+        "operationId": "postProjectsIdProfiles",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "who": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{id}": {
+      "patch": {
+        "summary": "Rename or describe a buyer profile",
+        "operationId": "patchProfilesId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "who": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a buyer profile; its questions stay",
+        "operationId": "deleteProfilesId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recommendations/{id}": {
+      "patch": {
+        "summary": "Mark a recommendation done or dismissed, or open it again",
+        "operationId": "patchRecommendationsId",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "done",
+                      "dismissed"
+                    ]
+                  }
+                },
+                "required": [
+                  "status"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

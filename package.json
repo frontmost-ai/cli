@@ -1,0 +1,23 @@
+{
+  "name": "frontmost",
+  "version": "0.1.0",
+  "description": "See how AI apps answer your buyers' questions, from the terminal.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "frontmost": "bin/frontmost.js" },
+  "files": ["bin", "src", "openapi.json"],
+  "engines": { "node": ">=22.12" },
+  "repository": { "type": "git", "url": "git+https://github.com/frontmost-ai/cli.git" },
+  "homepage": "https://frontmost.ai",
+  "bugs": "https://github.com/frontmost-ai/cli/issues",
+  "keywords": ["frontmost", "ai visibility", "cli"],
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "typecheck": "tsc",
+    "check-spec": "node scripts/check-spec.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "es2023",
+    "module": "nodenext",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["bin", "src", "test", "scripts"]
+}
