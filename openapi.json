@@ -120,6 +120,7 @@
             "name": "q",
             "in": "query",
             "required": false,
+            "description": "Find projects by name or domain",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -129,6 +130,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -140,6 +142,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -250,25 +253,30 @@
                 "type": "object",
                 "properties": {
                   "domain": {
+                    "description": "The website to track, such as example.com",
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 253
                   },
                   "setup_id": {
+                    "description": "The setup to continue, from the reply that said to wait",
                     "type": "string",
                     "pattern": "^\\d+$"
                   },
                   "country": {
+                    "description": "Country of your buyers, as two letters, such as US",
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 2
                   },
                   "language": {
+                    "description": "Language of the questions, such as en",
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 8
                   },
                   "questions": {
+                    "description": "Your own first questions, in place of the ones Frontmost AI writes",
                     "minItems": 1,
                     "maxItems": 100,
                     "type": "array",
@@ -278,11 +286,13 @@
                         "text": {
                           "type": "string",
                           "minLength": 8,
-                          "maxLength": 500
+                          "maxLength": 500,
+                          "description": "The question, 8 to 500 characters"
                         },
                         "topic": {
                           "type": "string",
-                          "maxLength": 80
+                          "maxLength": 80,
+                          "description": "The topic that groups the question"
                         }
                       },
                       "required": [
@@ -497,11 +507,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
+                    "description": "A new name for the project",
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 120
                   },
                   "scanning": {
+                    "description": "Start or stop the daily scans",
                     "type": "boolean"
                   }
                 },
@@ -608,6 +620,7 @@
             "name": "delivered_after",
             "in": "query",
             "required": false,
+            "description": "Only scans delivered after this date, such as 2026-11-01",
             "schema": {
               "type": "string"
             }
@@ -616,6 +629,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -627,6 +641,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -711,7 +726,7 @@
     },
     "/projects/{id}/metrics": {
       "get": {
-        "summary": "Visibility, Win Rate, Position, and Sentiment for one scope",
+        "summary": "Visibility, Win Rate, Position, and Sentiment",
         "operationId": "getProjectsIdMetrics",
         "security": [
           {
@@ -731,6 +746,7 @@
             "name": "scan_id",
             "in": "query",
             "required": false,
+            "description": "A delivered scan of the project. Default: the newest scan",
             "schema": {
               "type": "string",
               "pattern": "^\\d+$"
@@ -740,6 +756,7 @@
             "name": "period",
             "in": "query",
             "required": false,
+            "description": "Count one scan, or the calendar week or month that holds it",
             "schema": {
               "default": "scan",
               "type": "string",
@@ -754,6 +771,7 @@
             "name": "app",
             "in": "query",
             "required": false,
+            "description": "Only one AI app, such as chatgpt. Default: every app of the project",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -763,6 +781,7 @@
             "name": "questions",
             "in": "query",
             "required": false,
+            "description": "Which questions to count. Branded questions name your business",
             "schema": {
               "default": "all",
               "type": "string",
@@ -777,6 +796,7 @@
             "name": "compare_to",
             "in": "query",
             "required": false,
+            "description": "Compare with the period before, or with nothing",
             "schema": {
               "default": "previous",
               "type": "string",
@@ -790,6 +810,7 @@
             "name": "group_by",
             "in": "query",
             "required": false,
+            "description": "Split the numbers by AI app or by scan",
             "schema": {
               "type": "string",
               "enum": [
@@ -897,6 +918,7 @@
             "name": "scan_id",
             "in": "query",
             "required": false,
+            "description": "A delivered scan of the project. Default: the newest scan",
             "schema": {
               "type": "string",
               "pattern": "^\\d+$"
@@ -906,6 +928,7 @@
             "name": "period",
             "in": "query",
             "required": false,
+            "description": "Count one scan, or the calendar week or month that holds it",
             "schema": {
               "default": "scan",
               "type": "string",
@@ -920,6 +943,7 @@
             "name": "app",
             "in": "query",
             "required": false,
+            "description": "Only one AI app, such as chatgpt. Default: every app of the project",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -929,6 +953,7 @@
             "name": "questions",
             "in": "query",
             "required": false,
+            "description": "Which questions to count. Branded questions name your business",
             "schema": {
               "default": "all",
               "type": "string",
@@ -943,6 +968,7 @@
             "name": "compare_to",
             "in": "query",
             "required": false,
+            "description": "Compare with the period before, or with nothing",
             "schema": {
               "default": "previous",
               "type": "string",
@@ -956,6 +982,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -967,6 +994,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1051,7 +1079,7 @@
     },
     "/projects/{id}/answers": {
       "get": {
-        "summary": "Answers in scope, without their text",
+        "summary": "List answers. Get one answer to read its text",
         "operationId": "getProjectsIdAnswers",
         "security": [
           {
@@ -1071,6 +1099,7 @@
             "name": "scan_id",
             "in": "query",
             "required": false,
+            "description": "A delivered scan of the project. Default: the newest scan",
             "schema": {
               "type": "string",
               "pattern": "^\\d+$"
@@ -1080,6 +1109,7 @@
             "name": "period",
             "in": "query",
             "required": false,
+            "description": "Count one scan, or the calendar week or month that holds it",
             "schema": {
               "default": "scan",
               "type": "string",
@@ -1094,6 +1124,7 @@
             "name": "app",
             "in": "query",
             "required": false,
+            "description": "Only one AI app, such as chatgpt. Default: every app of the project",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1103,6 +1134,7 @@
             "name": "questions",
             "in": "query",
             "required": false,
+            "description": "Which questions to count. Branded questions name your business",
             "schema": {
               "default": "all",
               "type": "string",
@@ -1117,6 +1149,7 @@
             "name": "compare_to",
             "in": "query",
             "required": false,
+            "description": "Compare with the period before, or with nothing",
             "schema": {
               "default": "previous",
               "type": "string",
@@ -1130,6 +1163,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -1141,6 +1175,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1150,6 +1185,7 @@
             "name": "question_id",
             "in": "query",
             "required": false,
+            "description": "Only answers to this question",
             "schema": {
               "type": "string",
               "pattern": "^\\d+$"
@@ -1159,6 +1195,7 @@
             "name": "rival_id",
             "in": "query",
             "required": false,
+            "description": "Only answers that named this rival",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1168,6 +1205,7 @@
             "name": "named",
             "in": "query",
             "required": false,
+            "description": "Only answers that named you, or only answers that did not",
             "schema": {
               "type": "string",
               "enum": [
@@ -1180,6 +1218,7 @@
             "name": "cited_domain",
             "in": "query",
             "required": false,
+            "description": "Only answers that cited this site, such as reddit.com",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1379,6 +1418,7 @@
             "name": "scan_id",
             "in": "query",
             "required": false,
+            "description": "A delivered scan of the project. Default: the newest scan",
             "schema": {
               "type": "string",
               "pattern": "^\\d+$"
@@ -1388,6 +1428,7 @@
             "name": "period",
             "in": "query",
             "required": false,
+            "description": "Count one scan, or the calendar week or month that holds it",
             "schema": {
               "default": "scan",
               "type": "string",
@@ -1402,6 +1443,7 @@
             "name": "app",
             "in": "query",
             "required": false,
+            "description": "Only one AI app, such as chatgpt. Default: every app of the project",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1411,6 +1453,7 @@
             "name": "questions",
             "in": "query",
             "required": false,
+            "description": "Which questions to count. Branded questions name your business",
             "schema": {
               "default": "all",
               "type": "string",
@@ -1425,6 +1468,7 @@
             "name": "compare_to",
             "in": "query",
             "required": false,
+            "description": "Compare with the period before, or with nothing",
             "schema": {
               "default": "previous",
               "type": "string",
@@ -1438,6 +1482,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -1449,6 +1494,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1458,6 +1504,7 @@
             "name": "domain",
             "in": "query",
             "required": false,
+            "description": "Only this site, such as reddit.com",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1562,6 +1609,7 @@
             "name": "active",
             "in": "query",
             "required": false,
+            "description": "Only active questions, or only paused questions",
             "schema": {
               "type": "string",
               "enum": [
@@ -1574,6 +1622,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -1585,6 +1634,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1702,13 +1752,16 @@
                         "text": {
                           "type": "string",
                           "minLength": 8,
-                          "maxLength": 500
+                          "maxLength": 500,
+                          "description": "The question, 8 to 500 characters"
                         },
                         "topic": {
+                          "description": "The topic that groups the question",
                           "anyOf": [
                             {
                               "type": "string",
-                              "maxLength": 80
+                              "maxLength": 80,
+                              "description": "The topic that groups the question"
                             },
                             {
                               "type": "null"
@@ -1716,6 +1769,7 @@
                           ]
                         },
                         "profile_id": {
+                          "description": "The buyer profile that asks the question",
                           "anyOf": [
                             {
                               "type": "string",
@@ -1731,7 +1785,8 @@
                         "text"
                       ],
                       "additionalProperties": false
-                    }
+                    },
+                    "description": "1 to 25 questions"
                   }
                 },
                 "required": [
@@ -1840,6 +1895,7 @@
             "name": "status",
             "in": "query",
             "required": false,
+            "description": "Only recommendations with this status",
             "schema": {
               "type": "string",
               "enum": [
@@ -1853,6 +1909,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -1864,6 +1921,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -1968,6 +2026,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
+            "description": "Rows in one page, 1 to 100",
             "schema": {
               "default": 25,
               "type": "integer",
@@ -1979,6 +2038,7 @@
             "name": "cursor",
             "in": "query",
             "required": false,
+            "description": "The next_cursor of the page before",
             "schema": {
               "type": "string",
               "minLength": 1
@@ -2089,9 +2149,11 @@
                   "name": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 60
+                    "maxLength": 60,
+                    "description": "A short name, such as Agency owner"
                   },
                   "who": {
+                    "description": "Who this buyer is, in one or two sentences",
                     "type": "string",
                     "maxLength": 500
                   }
@@ -2218,13 +2280,16 @@
                   "text": {
                     "type": "string",
                     "minLength": 8,
-                    "maxLength": 500
+                    "maxLength": 500,
+                    "description": "The question, 8 to 500 characters"
                   },
                   "topic": {
+                    "description": "The topic that groups the question",
                     "anyOf": [
                       {
                         "type": "string",
-                        "maxLength": 80
+                        "maxLength": 80,
+                        "description": "The topic that groups the question"
                       },
                       {
                         "type": "null"
@@ -2232,6 +2297,7 @@
                     ]
                   },
                   "active": {
+                    "description": "Resume or pause the question",
                     "type": "boolean"
                   }
                 },
@@ -2344,11 +2410,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
+                    "description": "A new name",
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 60
                   },
                   "who": {
+                    "description": "Who this buyer is, in one or two sentences",
                     "type": "string",
                     "maxLength": 500
                   }
@@ -2553,7 +2621,8 @@
                       "open",
                       "done",
                       "dismissed"
-                    ]
+                    ],
+                    "description": "The new status"
                   }
                 },
                 "required": [
