@@ -38,10 +38,10 @@ test("the program sends the key as a Bearer header and refuses redirects", async
   server.close();
 });
 
-test("no key gives exit code 2 and the page that makes one", async () => {
+test("no sign-in gives exit code 2 and names the command that signs in", async () => {
   const r = /** @type {any} */ (await frontmost(["whoami"], {}));
   assert.equal(r.code, 2);
-  assert.match(r.stderr, /app\.frontmost\.ai\/team/);
+  assert.match(r.stderr, /Run "frontmost login"/);
 });
 
 test("a closed pipe ends the program without an error", async () => {

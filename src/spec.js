@@ -121,6 +121,8 @@ export const GLOBALS = /** @type {const} */ ({
   "idempotency-key": { type: "string", description: "Retry key for projects create. Default: made from the request body" },
   wait: { type: "boolean", description: "Return at once when a project setup is still running" },
   "api-key": { type: "string", description: "API key. Prefer FRONTMOST_API_KEY or frontmost login" },
+  browser: { type: "boolean", description: "For login. Sign in with a code. For a computer with no browser" },
+  "with-key": { type: "boolean", description: "For login. Save an API key in place of a browser sign-in" },
   help: { type: "boolean", short: "h", description: "Show help" },
   version: { type: "boolean", short: "v", description: "Show the version" },
 });

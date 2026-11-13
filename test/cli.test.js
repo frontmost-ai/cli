@@ -22,7 +22,7 @@ test("the key comes from --api-key, then the environment, then ./.env, then the 
   const sent = async (/** @type {string[]} */ argv, env = {}) => (await cli(["whoami", ...argv], { home, env })).requests[0]?.headers.authorization;
 
   assert.equal((await cli(["whoami"], { home, env: {} })).code, 2);
-  await cli(["login"], { home, env: {}, stdin: `${KEY}\n`, answer: () => ({ body: { name: "Acme" } }) });
+  await cli(["login", "--with-key"], { home, env: {}, stdin: `${KEY}\n`, answer: () => ({ body: { name: "Acme" } }) });
   assert.equal(await sent([]), `Bearer ${KEY}`);
 
   writeFileSync(join(home, ".env"), `OTHER=1\nFRONTMOST_API_URL=https://evil.example\nexport FRONTMOST_API_KEY="${OTHER_KEY}"\n`);
@@ -32,7 +32,7 @@ test("the key comes from --api-key, then the environment, then ./.env, then the 
 });
 
 test("login checks the key, then saves it for this user only. logout removes it", async () => {
-  const r = await cli(["login"], { env: {}, stdin: KEY, answer: () => ({ body: { name: "Acme" } }) });
+  const r = await cli(["login", "--with-key"], { env: {}, stdin: KEY, answer: () => ({ body: { name: "Acme" } }) });
   const file = join(r.home, ".config", "frontmost", "config.json");
   assert.equal(r.code, 0);
   assert.equal(r.requests[0].path, "/workspace");
@@ -40,7 +40,7 @@ test("login checks the key, then saves it for this user only. logout removes it"
   assert.equal(statSync(file).mode & 0o777, 0o600);
   assert.ok(!r.err.includes(KEY) && !r.out.includes(KEY));
 
-  const refused = await cli(["login"], { env: {}, stdin: OTHER_KEY, answer: () => ({ status: 401, body: { error: { code: "invalid_key", message: "The key is not valid." } } }) });
+  const refused = await cli(["login", "--with-key"], { env: {}, stdin: OTHER_KEY, answer: () => ({ status: 401, body: { error: { code: "invalid_key", message: "The key is not valid." } } }) });
   assert.equal(refused.code, 1);
   assert.throws(() => statSync(join(refused.home, ".config", "frontmost", "config.json")));
 

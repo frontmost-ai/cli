@@ -6,7 +6,7 @@ const TIMEOUT_MS = 60_000;
 const MAX_RETRY_WAIT_S = 60;
 
 /**
- * @typedef {{ base: string, key: string, fetch: typeof fetch, sleep: (ms: number) => Promise<unknown> }} Client
+ * @typedef {{ base: string, token: () => Promise<string>, fetch: typeof fetch, sleep: (ms: number) => Promise<unknown> }} Client `token` gives the API key, or the access of a browser sign-in.
  * @typedef {{ query?: Record<string, string>, body?: unknown, headers?: Record<string, string> }} Options
  * @typedef {{ status: number, body: any, headers: Headers }} Reply
  */
@@ -20,6 +20,7 @@ export async function request(client, method, path, options = {}, retried = fals
   if (url.origin !== new URL(client.base).origin) throw new ApiError("The path must stay on the Frontmost API.");
   for (const [k, v] of Object.entries(options.query ?? {})) url.searchParams.set(k, v);
 
+  const token = await client.token();
   let res;
   let text;
   try {
@@ -28,7 +29,7 @@ export async function request(client, method, path, options = {}, retried = fals
       redirect: "error",
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
-        authorization: `Bearer ${client.key}`,
+        authorization: `Bearer ${token}`,
         accept: "application/json",
         "user-agent": `frontmost-cli/${VERSION}`,
         ...(options.body === undefined ? {} : { "content-type": "application/json" }),

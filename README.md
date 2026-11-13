@@ -26,13 +26,15 @@ npm install -g github:frontmost-ai/cli
 
 ## Sign in
 
-Create an API key on the [Team page](https://app.frontmost.ai/team). Then:
-
 ```bash
 frontmost login
 ```
 
-In scripts and CI, set `FRONTMOST_API_KEY` instead.
+Your browser opens. Sign in there, and the CLI is ready. You stay signed in until `frontmost logout`.
+
+On a computer with no browser, such as one that you reach over SSH, run `frontmost login --no-browser`. It shows a code to enter on any device.
+
+In scripts and CI, create an API key on the [Team page](https://app.frontmost.ai/team) and set `FRONTMOST_API_KEY`.
 
 ## Commands
 
@@ -101,7 +103,7 @@ Or set `FRONTMOST_PROJECT`. `frontmost projects` lists the IDs.
 
 | | |
 | --- | --- |
-| Sign in | Set `FRONTMOST_API_KEY`. |
+| Sign in | Set `FRONTMOST_API_KEY`. Or ask the person to run `frontmost login` one time. |
 | Output | Add `--json`. You get the API response, unchanged. |
 | Paging | Add `--all` to get every page of a list. |
 | Errors | With `--json`, errors are JSON on stderr, with a `code` and a `request_id`. |
@@ -110,16 +112,20 @@ Or set `FRONTMOST_PROJECT`. `frontmost projects` lists the IDs.
 
 Without `--json`, output is a table on a terminal and tab-separated text in a pipe.
 
-## Your API key
+## How the CLI signs in
 
-The CLI uses the first key that it finds:
+The CLI uses the first of these that it finds:
 
 1. `--api-key`
 2. `FRONTMOST_API_KEY` in the environment
 3. `FRONTMOST_API_KEY` in `.env` in the current folder
-4. The key that `frontmost login` saved
+4. The sign-in that `frontmost login` saved
 
-The key goes only to `app.frontmost.ai`. The CLI never prints it, and `frontmost logout` removes the saved copy. More in [SECURITY.md](SECURITY.md).
+A browser sign-in can read and change, the same as you can in the app. To give a script less, use a Read key.
+
+`frontmost login --with-key` saves an API key in place of a browser sign-in.
+
+The CLI never prints a key or a sign-in. `frontmost logout` removes the saved copy. More in [SECURITY.md](SECURITY.md).
 
 ## Contributing
 

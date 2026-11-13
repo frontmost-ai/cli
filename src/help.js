@@ -5,8 +5,17 @@ import { commands, GLOBALS } from "./spec.js";
 const DOCS_URL = "https://app.frontmost.ai/docs/api.md";
 
 const ACCOUNT = /** @type {Record<string, { usage: string, summary: string, more?: string }>} */ ({
-  login: { usage: "login", summary: "Save an API key on this computer", more: `Paste the key when asked, or pipe it in. Create a key at ${KEYS_URL}.` },
-  logout: { usage: "logout", summary: "Remove the saved API key" },
+  login: {
+    usage: "login",
+    summary: "Sign in with your browser",
+    more: `Your browser opens. Sign in there, and the CLI is ready. The sign-in stays on this computer until "frontmost logout".
+
+Options
+  --no-browser  Sign in with a code. For a computer with no browser, such as one that you reach over SSH
+  --with-key    Save an API key in place of a browser sign-in. Paste the key when asked, or pipe it in
+                Create a key at ${KEYS_URL}`,
+  },
+  logout: { usage: "logout", summary: "Sign out on this computer" },
   api: {
     usage: "api [METHOD] <path>",
     summary: "Call any API route",
@@ -54,12 +63,12 @@ ${columns(Object.values(ACCOUNT).map((a) => [a.usage, a.summary]))}
 Options
 ${globals(["json", "project", "all", "help", "version"])}
 
-API key
-  Create a key at ${KEYS_URL}.
-  Then run "frontmost login", or set FRONTMOST_API_KEY.
+Sign in
+  Run "frontmost login". Your browser opens, and you sign in there.
+  For scripts and CI, create an API key at ${KEYS_URL} and set FRONTMOST_API_KEY.
 
 AI agents and scripts
-  Set FRONTMOST_API_KEY and add --json to every command.
+  Add --json to every command. With no sign-in, ask the person to run "frontmost login".
   Exit code 0 is success. 1 is an API or network error. 2 is a wrong command.
   Run "frontmost <command> --help" to see the options of one command.
   API reference: ${DOCS_URL}`;

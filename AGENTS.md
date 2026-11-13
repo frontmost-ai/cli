@@ -42,4 +42,4 @@ Never push a formula change to the tap's `main` branch directly. A direct push s
 
 - `npm run typecheck && npm test` passes. Chain the push after it with `&&`.
 - Output and help use the customer's words: scans, questions, AI apps, rivals, recommendations.
-- The key never appears in output, errors, or logs.
+- A key or a sign-in token never appears in output, errors, or logs.

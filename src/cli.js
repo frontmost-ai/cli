@@ -1,10 +1,11 @@
 // frontmost <command>: read the arguments, send one API request, print the reply.
 import { createHash } from "node:crypto";
 import { parseArgs } from "node:util";
-import { apiKey, baseUrl, checkKey, KEYS_URL, projectSetting, removeKey, saveKey } from "./config.js";
+import { apiKey, baseUrl, checkKey, KEYS_URL, projectSetting, readSignIn, removeKey, saveKey, saveSignIn } from "./config.js";
 import { ApiError, UsageError } from "./errors.js";
 import { commandHelp, firstWords, group, nearest, overview, usage } from "./help.js";
 import { request } from "./http.js";
+import { accessToken, openBrowser, signIn } from "./oauth.js";
 import { clean, json, render } from "./output.js";
 import { commands, GLOBALS, VERSION } from "./spec.js";
 
@@ -22,6 +23,7 @@ const METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE"]);
  * @property {(text: string) => void} note Progress and errors. Goes to stderr.
  * @property {() => Promise<string>} readStdin
  * @property {() => Promise<string>} readSecret
+ * @property {(url: string) => Promise<boolean>} open Opens a page in the browser. False when no browser can open.
  * @property {boolean} tty True when stdout is a terminal.
  * @property {number} [width]
  */
@@ -43,6 +45,7 @@ function realIo() {
     note: (text) => stderr.write(`${text}\n`),
     readStdin,
     readSecret: () => (stdin.isTTY ? promptSecret() : readStdin()),
+    open: openBrowser,
     tty: Boolean(stdout.isTTY),
     width: stdout.columns,
   };
@@ -139,9 +142,12 @@ async function main(argv, io) {
   }
   if (values.help) return io.out(help);
 
-  if (name === "logout") return io.note(`Signed out. Removed ${removeKey(io.env)}.`);
+  if (name === "logout") return logout(io);
   if (name === "login") return login(values, io);
-  const client = { base: baseUrl(io.env), key: apiKey({ flag: str(values["api-key"]), ...io }), fetch: io.fetch, sleep: io.sleep };
+  const key = apiKey({ flag: str(values["api-key"]), ...io });
+  if (!key && !readSignIn(io.env)) throw new UsageError('Not signed in. Run "frontmost login", or set FRONTMOST_API_KEY.');
+  const base = baseUrl(io.env);
+  const client = { base, token: key ? async () => key : accessToken(io, base), fetch: io.fetch, sleep: io.sleep };
   if (name === "api") return api(client, args, values, io);
   return execute(client, /** @type {import("./spec.js").Command} */ (commands.get(name)), args, values, io);
 }
@@ -151,10 +157,24 @@ const str = (v) => (typeof v === "string" ? v : undefined);
 
 /** @param {Record<string, unknown>} values @param {Io} io */
 async function login(values, io) {
-  const key = checkKey((str(values["api-key"]) ?? (await io.readSecret())).trim());
-  const { body } = await request({ base: baseUrl(io.env), key, fetch: io.fetch, sleep: io.sleep }, "GET", "/workspace");
-  const file = saveKey(io.env, key);
-  io.note(clean(`Signed in to ${body.name}. Key saved to ${file}.`));
+  const base = baseUrl(io.env);
+  /** The sign-in is saved only after the API accepts it. @param {string} token */
+  const workspace = async (token) => (await request({ base, token: async () => token, fetch: io.fetch, sleep: io.sleep }, "GET", "/workspace")).body.name;
+
+  const flag = str(values["api-key"]);
+  if (flag || values["with-key"]) {
+    const key = checkKey((flag ?? (await io.readSecret())).trim());
+    const name = await workspace(key);
+    return io.note(clean(`Signed in to ${name}. Key saved to ${saveKey(io.env, key)}.`));
+  }
+  const saved = await signIn(io, base, { browser: values.browser !== false });
+  const name = await workspace(saved.access_token);
+  io.note(clean(`Signed in to ${name}. Sign-in saved to ${saveSignIn(io.env, saved)}.`));
+}
+
+/** @param {Io} io */
+async function logout(io) {
+  io.note(`Signed out. Removed ${removeKey(io.env)}.`);
 }
 
 /** @param {string | undefined} raw @param {Io} io */
