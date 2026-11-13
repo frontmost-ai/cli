@@ -42,6 +42,7 @@ frontmost sources                Sites that the answers cited
 frontmost answers                Answers in a scan
 frontmost answers get <id>       One answer, with its text and citations
 frontmost questions              The questions that Frontmost AI asks
+frontmost profiles               Your buyer profiles
 frontmost recommendations        What to do next
 ```
 

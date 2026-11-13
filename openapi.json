@@ -15,7 +15,7 @@
       "bearer": {
         "type": "http",
         "scheme": "bearer",
-        "description": "A workspace API key (fmk_\u2026) from the Team page, or an OAuth access token for this API."
+        "description": "A workspace API key (fmk_…) from the Team page, or an OAuth access token for this API."
       }
     }
   },
@@ -1946,10 +1946,10 @@
         }
       }
     },
-    "/projects/{id}/questions/{question_id}": {
-      "patch": {
-        "summary": "Reword, move, pause, or resume a question",
-        "operationId": "patchProjectsIdQuestionsQuestion_id",
+    "/projects/{id}/profiles": {
+      "get": {
+        "summary": "The project's buyer profiles",
+        "operationId": "getProjectsIdProfiles",
         "security": [
           {
             "bearer": []
@@ -1965,47 +1965,26 @@
             }
           },
           {
-            "name": "question_id",
-            "in": "path",
-            "required": true,
+            "name": "limit",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string"
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "text": {
-                    "type": "string",
-                    "minLength": 8,
-                    "maxLength": 500
-                  },
-                  "topic": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "maxLength": 80
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "active": {
-                    "type": "boolean"
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -2080,9 +2059,7 @@
             }
           }
         }
-      }
-    },
-    "/projects/{id}/profiles": {
+      },
       "post": {
         "summary": "Add a buyer profile",
         "operationId": "postProjectsIdProfiles",
@@ -2129,6 +2106,142 @@
         },
         "responses": {
           "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message",
+                        "param",
+                        "request_id"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_key",
+                            "key_revoked",
+                            "plan_no_api",
+                            "needs_plan",
+                            "key_read_only",
+                            "not_found",
+                            "idempotency_conflict",
+                            "request_in_progress",
+                            "invalid_param",
+                            "invalid_cursor",
+                            "question_limit",
+                            "project_limit",
+                            "profile_limit",
+                            "site_unreadable",
+                            "rate_limited",
+                            "internal_error"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "request_id": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/questions/{question_id}": {
+      "patch": {
+        "summary": "Reword, move, pause, or resume a question",
+        "operationId": "patchProjectsIdQuestionsQuestion_id",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 500
+                  },
+                  "topic": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
             "description": "OK",
             "content": {
               "application/json": {

@@ -12,7 +12,7 @@ test("every API route is exactly one command", () => {
 
 test("the command names are the ones in the README", () => {
   assert.deepEqual([...commands.keys()].sort(), [
-    "answers", "answers get", "metrics", "profiles add", "profiles remove", "profiles update",
+    "answers", "answers get", "metrics", "profiles", "profiles add", "profiles remove", "profiles update",
     "projects", "projects create", "projects get", "projects update",
     "questions", "questions add", "questions update",
     "recommendations", "recommendations dismiss", "recommendations done", "recommendations reopen", "recommendations update",
