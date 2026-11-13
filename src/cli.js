@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { parseArgs } from "node:util";
 import { apiKey, baseUrl, checkKey, KEYS_URL, projectSetting, removeKey, saveKey } from "./config.js";
 import { ApiError, UsageError } from "./errors.js";
-import { commandHelp, group, overview, usage } from "./help.js";
+import { commandHelp, firstWords, group, nearest, overview, usage } from "./help.js";
 import { request } from "./http.js";
 import { clean, json, render } from "./output.js";
 import { commands, GLOBALS, VERSION } from "./spec.js";
@@ -86,6 +86,9 @@ function parse(argv) {
   try {
     return parseArgs({ args: argv, options: OPTIONS, allowPositionals: true, allowNegative: true, strict: true });
   } catch (e) {
+    const unknown = e instanceof Error && /^Unknown option '--([^']+)'/.exec(e.message)?.[1];
+    const close = unknown && nearest(unknown.replace(/^no-/, ""), Object.keys(OPTIONS));
+    if (unknown) throw new UsageError(`--${unknown} is not an option.${close ? ` Did you mean --${close}?` : ""} Run "frontmost --help" to see the commands.`);
     const reason = e instanceof Error ? e.message.split(". ")[0].replace(/\.$/, "") : "Wrong arguments";
     throw new UsageError(`${reason}. Run "frontmost --help" to see the commands.`);
   }
@@ -130,7 +133,9 @@ async function main(argv, io) {
   if (help === null) {
     const choices = group(name);
     if (choices && values.help) return io.out(choices);
-    throw new UsageError(choices ? `"frontmost ${name}" needs one more word:\n${choices}` : `"${name}" is not a command. Run "frontmost --help" to see the commands.`);
+    if (choices) throw new UsageError(`"frontmost ${name}" needs one more word:\n${choices}`);
+    const close = nearest(name, firstWords());
+    throw new UsageError(`"${name}" is not a command. ${close ? `Did you mean "frontmost ${close}"?` : 'Run "frontmost --help" to see the commands.'}`);
   }
   if (values.help) return io.out(help);
 
@@ -219,7 +224,10 @@ async function execute(client, cmd, args, values, io) {
   for (const [name, value] of Object.entries(values)) {
     if (name in GLOBALS) continue;
     const flag = cmd.flags.get(name);
-    if (!flag) throw wrong(`--${name} is not an option of this command.`);
+    if (!flag) {
+      const close = nearest(name, cmd.flags.keys());
+      throw wrong(`--${name} is not an option of this command.${close ? ` Did you mean --${close}?` : ""}`);
+    }
     const target = flag.in === "query" ? query : flag.in === "item" ? item : body;
     /** @type {Record<string, unknown>} */ (target)[flag.key] = convert(flag, value);
   }
@@ -231,19 +239,24 @@ async function execute(client, cmd, args, values, io) {
     if (value === undefined) throw wrong(`Missing <${arg.replaceAll("_", "-")}>.`);
     ids[arg] = value;
   }
-  if (cmd.inProject) ids.id = (cmd.path === "/projects/{id}" && rest.shift()) || (await projectId(client, values, io));
+  const named = cmd.path === "/projects/{id}" ? rest.shift() : undefined;
   if (body && cmd.positional && rest.length) {
     const { field, list } = cmd.positional;
     if (list) body[list] = rest.splice(0).map((text) => ({ [field]: text, ...item }));
     else body[field] = rest.shift();
   }
-  if (rest.length) throw wrong(`"${rest[0]}" is one argument too many.`);
+  if (rest.length) {
+    const choices = group(cmd.name);
+    throw choices ? new UsageError(`"frontmost ${cmd.name} ${rest[0]}" is not a command. The commands are:\n${choices}`) : wrong(`"${rest[0]}" is one argument too many.`);
+  }
   if (body) {
     Object.assign(body, cmd.preset);
     const missing = cmd.required.filter((k) => !(k in body));
     if (missing.length) throw wrong(`Missing ${missing.join(", ")}.`);
     if (!Object.keys(body).length) throw wrong("Nothing to send. Add at least one option.");
   }
+  // Last, because it can take a request: every other mistake is reported first.
+  if (cmd.inProject) ids.id = named ?? (await projectId(client, values, io));
 
   const path = cmd.path.replace(/\{(\w+)\}/g, (_, param) => encodeURIComponent(ids[param]));
   const headers = cmd.retryKey && body && !body.setup_id ? { "Idempotency-Key": str(values["idempotency-key"]) ?? createHash("sha256").update(JSON.stringify(body)).digest("hex") } : undefined;

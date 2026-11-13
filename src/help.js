@@ -32,8 +32,11 @@ const globals = (names) => columns(names.map((n) => [n === "wait" ? "--no-wait" 
 
 export function overview() {
   const all = [...commands.values()];
-  /** @param {(c: import("./spec.js").Command) => boolean} keep */
-  const rows = (keep) => columns(all.filter(keep).map((c) => [usage(c), c.summary]));
+  const nouns = [...new Set(all.map((c) => c.name.split(" ")[0]))];
+  /** @param {import("./spec.js").Command} c */
+  const order = (c) => nouns.indexOf(c.name.split(" ")[0]);
+  /** Commands of one noun stay together. @param {(c: import("./spec.js").Command) => boolean} keep */
+  const rows = (keep) => columns(all.filter(keep).sort((a, b) => order(a) - order(b)).map((c) => [usage(c), c.summary]));
   return `See how AI apps answer your buyers' questions.
 
 Usage
@@ -90,3 +93,27 @@ export function group(noun) {
   const rows = [...commands.values()].filter((c) => c.name.startsWith(`${noun} `)).map((c) => /** @type {[string, string]} */ ([usage(c), c.summary]));
   return rows.length ? columns(rows) : null;
 }
+
+/**
+ * The one choice that starts with the word, else the choice closest to it, or null when none is close.
+ * @param {string} word @param {Iterable<string>} choices
+ */
+export function nearest(word, choices) {
+  /** @param {string} a @param {string} b */
+  const distance = (a, b) => {
+    let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const next = [i];
+      for (let j = 1; j <= b.length; j++) next[j] = Math.min(next[j - 1] + 1, row[j] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      row = next;
+    }
+    return row[b.length];
+  };
+  const starts = [...choices].filter((c) => c.startsWith(word));
+  if (starts.length === 1) return starts[0];
+  const [best] = [...choices].map((c) => /** @type {const} */ ([c, distance(word, c)])).sort((a, b) => a[1] - b[1]);
+  return best && best[1] <= Math.max(1, Math.floor(word.length / 3)) ? best[0] : null;
+}
+
+/** The first word of every command. */
+export const firstWords = () => new Set([...Object.keys(ACCOUNT), ...[...commands.keys()].map((n) => n.split(" ")[0])]);

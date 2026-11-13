@@ -1,6 +1,6 @@
 {
   "name": "frontmost",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "See how AI apps answer your buyers' questions, from the terminal.",
   "license": "MIT",
   "type": "module",

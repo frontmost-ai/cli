@@ -252,3 +252,20 @@ test("api calls any route and prints JSON", async () => {
   const post = await cli(["api", "post", "/projects/7/profiles", "--body", '{"name":"Ops"}']);
   assert.deepEqual([post.requests[0].method, post.requests[0].body], ["POST", { name: "Ops" }]);
 });
+
+test("a wrong word gets a hint, with exit code 2 and no request", async () => {
+  /** @type {[string[], RegExp][]} */
+  const cases = [
+    [["metrcs"], /Did you mean "frontmost metrics"\?/],
+    [["answers", "--apps", "chatgpt"], /Did you mean --app\?/],
+    [["recommendations", "finish", "3"], /"frontmost recommendations finish" is not a command[\s\S]*recommendations done <id>/],
+    [["profiles", "add"], /Missing name/],
+    [["metrics", "extra"], /one argument too many/],
+  ];
+  for (const [argv, hint] of cases) {
+    const r = await cli(argv, { answer: oneProject });
+    assert.equal(r.code, 2, argv.join(" "));
+    assert.match(r.err, hint);
+    assert.equal(r.requests.length, 0, argv.join(" "));
+  }
+});
