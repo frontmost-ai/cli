@@ -12,11 +12,17 @@ ID  TEXT                                       TOPIC     ACTIVE  IS_BRANDED  PRO
 
 ## Install
 
+With Homebrew:
+
+```bash
+brew install frontmost-ai/tap/frontmost
+```
+
+With npm (Node.js 22.12 or later):
+
 ```bash
 npm install -g github:frontmost-ai/cli
 ```
-
-Needs Node.js 22.12 or later.
 
 ## Sign in
 
