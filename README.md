@@ -117,6 +117,8 @@ Or set `FRONTMOST_PROJECT`. `frontmost projects` lists the IDs.
 | Any route | `frontmost api [METHOD] <path>` calls the [API](https://app.frontmost.ai/docs/api.md) directly. |
 
 Without `--json`, output is a table on a terminal and tab-separated text in a pipe.
+On a terminal, a rate shows its counts: `0.16 (4/25)`. In a pipe, the counts are separate columns, such as `visibility.numerator`.
+In a pipe, one object is one `key<tab>value` line per field, and long text is on one line.
 
 ## How the CLI signs in
 

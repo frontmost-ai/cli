@@ -24,14 +24,18 @@ function cell(v) {
 }
 
 /**
- * One level of key and value pairs. {a: {b: 1}} becomes a.b. A rate {value, numerator, ...} shows its value.
- * @param {Record<string, unknown>} obj @returns {[string, unknown][]}
+ * One level of key and value pairs. {a: {b: 1}} becomes a.b.
+ * A rate {value, numerator, denominator} is one cell with its counts on a terminal: 0.16 (4/25).
+ * In a pipe, the value keeps the plain name and each other field has its own column: a, a.numerator, a.denominator.
+ * @param {Record<string, unknown>} obj @param {boolean} tty @returns {[string, unknown][]}
  */
-export function flatten(obj, prefix = "") {
+export function flatten(obj, tty, prefix = "") {
   return Object.entries(obj).flatMap(([k, v]) => {
     if (!isObject(v)) return [[prefix + k, v]];
-    if ("value" in v) return [[prefix + k, v.value]];
-    return flatten(v, `${prefix}${k}.`);
+    if (!("value" in v)) return flatten(v, tty, `${prefix}${k}.`);
+    if (!tty) return Object.entries(v).map(([field, x]) => /** @type {[string, unknown]} */ ([field === "value" ? prefix + k : `${prefix}${k}.${field}`, x]));
+    const counted = v.value !== null && typeof v.numerator === "number" && typeof v.denominator === "number";
+    return [[prefix + k, counted ? `${v.value} (${v.numerator}/${v.denominator})` : v.value]];
   });
 }
 
@@ -40,7 +44,7 @@ export function flatten(obj, prefix = "") {
  * @param {{ tty: boolean, width?: number }} view On a terminal: aligned columns that fit the width. Else: tab-separated, all columns.
  */
 export function table(rows, { tty, width = 80 }) {
-  const flat = rows.map((r) => new Map(flatten(r).map(([k, v]) => [k, oneLine(cell(v))])));
+  const flat = rows.map((r) => new Map(flatten(r, tty).map(([k, v]) => [k, oneLine(cell(v))])));
   const columns = [...new Set(flat.flatMap((r) => [...r.keys()]))].filter((c) => c !== "object");
   if (!tty) return [columns.join("\t"), ...flat.map((r) => columns.map((c) => r.get(c) ?? "").join("\t"))].join("\n");
 
@@ -60,16 +64,23 @@ export function table(rows, { tty, width = 80 }) {
 }
 
 /**
- * One object as "key  value" lines. Lists of objects inside it follow as tables.
+ * One object as "key  value" lines. On a terminal, long text keeps its lines and lists of objects follow as tables.
+ * In a pipe, every line is key, tab, value: text is on one line, and a list of objects is one line per field (rivals.0.name).
  * @param {Record<string, unknown>} obj @param {{ tty: boolean, width?: number }} view
  */
 export function record(obj, view) {
-  const pairs = flatten(obj).filter(([k]) => k !== "object");
+  const pairs = flatten(obj, view.tty).filter(([k]) => k !== "object");
+  if (!view.tty) {
+    return pairs
+      .flatMap(([k, v]) => (isRows(v) ? v.flatMap((row, i) => flatten(row, false, `${k}.${i}.`).filter(([key]) => !key.endsWith(".object"))) : [[k, v]]))
+      .map(([k, v]) => `${k}\t${oneLine(cell(v))}`)
+      .join("\n");
+  }
   const plain = pairs.filter(([, v]) => !isRows(v));
   const pad = Math.max(0, ...plain.map(([k]) => k.length));
   const lines = plain.map(([k, v]) => {
     const text = clean(cell(v)).trim();
-    return text.includes("\n") ? `${k}\n${text}` : view.tty ? `${k.padEnd(pad)}  ${text}` : `${k}\t${text}`;
+    return text.includes("\n") ? `${k}\n${text}` : `${k.padEnd(pad)}  ${text}`;
   });
   for (const [k, v] of pairs) if (isRows(v)) lines.push("", k, table(v, view));
   return lines.join("\n");

@@ -228,14 +228,20 @@ test("--json prints the API reply unchanged", async () => {
 test("without --json a list is a table and one object is key and value lines", async () => {
   const rows = [{ object: "rival", id: "1", name: "Globex", visibility: { value: 0.4, numerator: 4, denominator: 10, previous: 0.3 }, tags: ["a", "b"], parent: null }];
   const piped = await cli(["rivals", "--project", "7"], { answer: () => ({ body: list(rows, "abc") }) });
-  assert.equal(piped.out, "id\tname\tvisibility\ttags\tparent\n1\tGlobex\t0.4\ta, b\t");
+  assert.equal(piped.out, "id\tname\tvisibility\tvisibility.numerator\tvisibility.denominator\tvisibility.previous\ttags\tparent\n1\tGlobex\t0.4\t4\t10\t0.3\ta, b\t");
   assert.match(piped.err, /--cursor abc/);
 
   const screen = await cli(["rivals", "--project", "7"], { tty: true, answer: () => ({ body: list(rows) }) });
-  assert.equal(screen.out, "ID  NAME    VISIBILITY  TAGS  PARENT\n1   Globex  0.4         a, b");
+  assert.equal(screen.out, "ID  NAME    VISIBILITY  TAGS  PARENT\n1   Globex  0.4 (4/10)  a, b");
 
   const one = await cli(["whoami"], { tty: true, answer: () => ({ body: { object: "workspace", name: "Acme", questions: { used: 3, max: 50 }, apps: [{ id: "chatgpt" }] } }) });
   assert.equal(one.out, "name            Acme\nquestions.used  3\nquestions.max   50\n\napps\nID\nchatgpt");
+
+  // In a pipe, every line of one object is key, tab, value. Text is on one line, and a list inside is one line per field.
+  const answer = { object: "answer", id: "9", text: "First line.\n\nSecond\tline.", win_rate: { value: 0.5, numerator: 1, denominator: 2 }, mentions: [{ object: "mention", name: "Globex", position: 1 }] };
+  const pipedOne = await cli(["answers", "get", "9"], { answer: () => ({ body: answer }) });
+  assert.equal(pipedOne.out, "id\t9\ntext\tFirst line. Second line.\nwin_rate\t0.5\nwin_rate.numerator\t1\nwin_rate.denominator\t2\nmentions.0.name\tGlobex\nmentions.0.position\t1");
+  assert.ok(pipedOne.out.split("\n").every((line) => line.split("\t").length === 2));
 
   const empty = await cli(["scans", "--project", "7"], { answer: () => ({ body: { ...list([]), message: "No scan is delivered yet." } }) });
   assert.deepEqual([empty.out, empty.err], ["", "No scan is delivered yet."]);
