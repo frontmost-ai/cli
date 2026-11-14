@@ -24,6 +24,8 @@ const POSITIONAL = /** @type {Record<string, { field: string, list?: string, lab
 
 /** Short forms of one command with one body field already set. */
 const SHORTCUTS = /** @type {Record<string, { of: string, preset: Record<string, unknown>, summary: string }>} */ ({
+  "questions pause": { of: "questions update", preset: { active: false }, summary: "Pause a question. It keeps its history and frees room in the plan" },
+  "questions resume": { of: "questions update", preset: { active: true }, summary: "Ask a paused question again" },
   "recommendations done": { of: "recommendations update", preset: { status: "done" }, summary: "Mark a recommendation done" },
   "recommendations dismiss": { of: "recommendations update", preset: { status: "dismissed" }, summary: "Dismiss a recommendation" },
   "recommendations reopen": { of: "recommendations update", preset: { status: "open" }, summary: "Open a recommendation again" },

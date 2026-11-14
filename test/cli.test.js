@@ -154,6 +154,10 @@ test("profiles and recommendations", async () => {
     assert.deepEqual([r.requests[0].method, r.requests[0].path, r.requests[0].body], ["PATCH", "/recommendations/12", { status }]);
   }
   assert.equal((await cli(["recommendations", "done", "12", "--status", "open"])).code, 2);
+  for (const [word, active] of /** @type {const} */ ([["pause", false], ["resume", true]])) {
+    const r = await cli(["questions", word, "9", "--project", "7"]);
+    assert.deepEqual([r.requests[0].method, r.requests[0].path, r.requests[0].body], ["PATCH", "/projects/7/questions/9", { active }]);
+  }
 });
 
 test("IDs are escaped in the path", async () => {

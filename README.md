@@ -59,9 +59,11 @@ frontmost recommendations        What to do next
 
 ```
 frontmost projects create <domain>          Start tracking a website
-frontmost projects update                   Rename a project, or start or stop daily scans
+frontmost projects update                   Rename a project, or start or stop its scans
 frontmost questions add "<question>"...     Add questions
-frontmost questions update <id>             Reword, move, pause, or resume a question
+frontmost questions update <id>             Reword or move a question
+frontmost questions pause <id>              Pause a question. It keeps its history and frees room in the plan
+frontmost questions resume <id>             Ask a paused question again
 frontmost profiles add <name>               Add a buyer profile
 frontmost profiles update <id>              Rename or describe a buyer profile
 frontmost profiles remove <id>              Remove a buyer profile

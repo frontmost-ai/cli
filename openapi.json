@@ -481,7 +481,7 @@
         }
       },
       "patch": {
-        "summary": "Rename a project, or start or stop its daily scans",
+        "summary": "Rename a project, or start or stop its scans",
         "operationId": "patchProjectsId",
         "security": [
           {
@@ -513,7 +513,7 @@
                     "maxLength": 120
                   },
                   "scanning": {
-                    "description": "Start or stop the daily scans",
+                    "description": "Start or stop the scans",
                     "type": "boolean"
                   }
                 },

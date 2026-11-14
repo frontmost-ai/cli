@@ -14,7 +14,7 @@ test("the command names are the ones in the README", () => {
   assert.deepEqual([...commands.keys()].sort(), [
     "answers", "answers get", "metrics", "profiles", "profiles add", "profiles remove", "profiles update",
     "projects", "projects create", "projects get", "projects update",
-    "questions", "questions add", "questions update",
+    "questions", "questions add", "questions pause", "questions resume", "questions update",
     "recommendations", "recommendations dismiss", "recommendations done", "recommendations reopen", "recommendations update",
     "rivals", "scans", "sources", "whoami",
   ]);
