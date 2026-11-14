@@ -1509,6 +1509,29 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "description": "Only sites in this channel, such as editorial or own_website",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "own_website",
+                "competitor_sites",
+                "editorial",
+                "review_sites",
+                "reddit",
+                "youtube",
+                "linkedin",
+                "forums",
+                "directories",
+                "reference",
+                "company_sites",
+                "other"
+              ]
+            }
           }
         ],
         "responses": {

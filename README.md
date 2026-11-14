@@ -46,7 +46,7 @@ frontmost projects               Your projects
 frontmost scans                  Delivered scans, newest first
 frontmost metrics                Visibility, Win Rate, Position, and Sentiment
 frontmost rivals                 Rivals that the answers named
-frontmost sources                Sites that the answers cited
+frontmost sources                Sites that the answers cited, with each site's channel
 frontmost answers                Answers in a scan
 frontmost answers get <id>       One answer, with its text and citations
 frontmost questions              The questions that Frontmost AI asks
@@ -79,6 +79,9 @@ frontmost metrics --period week --questions unbranded
 
 # ChatGPT answers that did not name you
 frontmost answers --app chatgpt --no-named
+
+# Review sites that the answers cited
+frontmost sources --channel review_sites
 
 # Add two questions under one topic
 frontmost questions add "Which CRM is best for agencies?" "Which CRM has the best reporting?" --topic CRM
