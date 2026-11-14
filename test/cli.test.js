@@ -44,8 +44,11 @@ test("login checks the key, then saves it for this user only. logout removes it"
   assert.equal(refused.code, 1);
   assert.throws(() => statSync(join(refused.home, ".config", "frontmost", "config.json")));
 
-  await cli(["logout"], { home: r.home, env: {} });
+  const first = await cli(["logout"], { home: r.home, env: {} });
   assert.throws(() => statSync(file));
+  assert.match(first.err, /^Signed out\./);
+  const second = await cli(["logout"], { home: r.home, env: {} });
+  assert.deepEqual([second.code, second.err], [0, "No sign-in is saved on this computer."]);
 });
 
 test("a value that is not a key never leaves the computer", async () => {
@@ -251,6 +254,8 @@ test("api calls any route and prints JSON", async () => {
   assert.deepEqual(JSON.parse(get.out), list([]));
   const post = await cli(["api", "post", "/projects/7/profiles", "--body", '{"name":"Ops"}']);
   assert.deepEqual([post.requests[0].method, post.requests[0].body], ["POST", { name: "Ops" }]);
+  const pasted = await cli(["api", "/api/v1/projects?limit=5"], { answer: () => ({ body: list([]) }) });
+  assert.deepEqual([pasted.requests[0].path, pasted.requests[0].query], ["/projects", { limit: "5" }]);
 });
 
 test("a wrong word gets a hint, with exit code 2 and no request", async () => {

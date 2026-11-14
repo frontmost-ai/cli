@@ -43,6 +43,7 @@ In scripts and CI, create an API key on the [Team page](https://app.frontmost.ai
 ```
 frontmost whoami                 Your workspace, plan, and limits
 frontmost projects               Your projects
+frontmost projects get           One project
 frontmost scans                  Delivered scans, newest first
 frontmost metrics                Visibility, Win Rate, Position, and Sentiment
 frontmost rivals                 Rivals that the answers named

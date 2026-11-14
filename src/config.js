@@ -1,5 +1,5 @@
 // Where the sign-in, the API key, and the project ID come from.
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { UsageError } from "./errors.js";
@@ -49,8 +49,9 @@ export function readSignIn(env) {
   return usable ? s : undefined;
 }
 
-/** @param {Env} env */
+/** Remove the saved key or sign-in. @param {Env} env @returns {string | null} The file removed, or null when none was saved. */
 export function removeKey(env) {
+  if (!existsSync(configPath(env))) return null;
   rmSync(configPath(env), { force: true });
   return configPath(env);
 }

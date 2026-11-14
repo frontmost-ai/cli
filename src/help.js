@@ -19,7 +19,7 @@ Options
   api: {
     usage: "api [METHOD] <path>",
     summary: "Call any API route",
-    more: 'The method is GET when you leave it out. The output is always JSON.\nExample: frontmost api "/projects?limit=5"',
+    more: 'The method is GET when you leave it out. The output is always JSON.\nThe path is the part after /api/v1. Add --body \'<json>\' to send data.\nExample: frontmost api "/projects?limit=5"',
   },
 });
 

@@ -174,7 +174,8 @@ async function login(values, io) {
 
 /** @param {Io} io */
 async function logout(io) {
-  io.note(`Signed out. Removed ${removeKey(io.env)}.`);
+  const removed = removeKey(io.env);
+  io.note(removed ? `Signed out. Removed ${removed}.` : "No sign-in is saved on this computer.");
 }
 
 /** @param {string | undefined} raw @param {Io} io */
@@ -191,8 +192,10 @@ async function readBody(raw, io) {
 
 /** @param {import("./http.js").Client} client @param {string[]} args @param {Record<string, unknown>} values @param {Io} io */
 async function api(client, args, values, io) {
-  const [method, path] = args.length === 1 ? ["GET", args[0]] : [args[0]?.toUpperCase(), args[1]];
-  if (args.length > 2 || !METHODS.has(method) || !path?.startsWith("/")) throw new UsageError('Use: frontmost api [METHOD] <path>. The path starts with /, for example "/projects?limit=5".');
+  const [method, full] = args.length === 1 ? ["GET", args[0]] : [args[0]?.toUpperCase(), args[1]];
+  // Docs show the full address, so a pasted "/api/v1/projects" works too.
+  const path = full?.replace(/^\/api\/v1(?=[/?]|$)/, "") || "/";
+  if (args.length > 2 || !METHODS.has(method) || !full?.startsWith("/")) throw new UsageError('Use: frontmost api [METHOD] <path>. The path starts with /, for example "/projects?limit=5".');
   const key = str(values["idempotency-key"]);
   const body = values.body === undefined ? undefined : await readBody(str(values.body), io);
   const reply = await request(client, method, path, { body, headers: key ? { "Idempotency-Key": key } : {} });
