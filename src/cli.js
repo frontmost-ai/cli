@@ -4,10 +4,12 @@ import { parseArgs } from "node:util";
 import { apiKey, baseUrl, checkKey, KEYS_URL, projectSetting, readSignIn, removeKey, saveKey, saveSignIn } from "./config.js";
 import { ApiError, UsageError } from "./errors.js";
 import { commandHelp, firstWords, group, nearest, overview, usage } from "./help.js";
+import { home, welcome } from "./home.js";
 import { request } from "./http.js";
 import { accessToken, openBrowser, signIn } from "./oauth.js";
 import { clean, json, render } from "./output.js";
 import { commands, GLOBALS, VERSION } from "./spec.js";
+import { PLAIN, spinner, styleFor } from "./style.js";
 
 const SETUP_LIMIT_MS = 10 * 60_000;
 const METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE"]);
@@ -26,28 +28,34 @@ const METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE"]);
  * @property {(url: string) => Promise<boolean>} open Opens a page in the browser. False when no browser can open.
  * @property {boolean} tty True when stdout is a terminal.
  * @property {number} [width]
+ * @property {import("./style.js").Style} [style] For stdout. Plain when it is not a terminal.
+ * @property {import("./style.js").Style} [noteStyle] For stderr.
  */
 
-/** @returns {Io} */
-function realIo() {
-  const { stdin, stdout, stderr } = process;
+/** @param {boolean} quiet No moving dots, for --json. @returns {Io} */
+function realIo(quiet) {
+  const { stdin, stdout, stderr, env } = process;
+  const noteStyle = styleFor(stderr, env);
+  const spin = !quiet && stderr.isTTY && env.TERM !== "dumb" ? spinner(stderr, noteStyle) : null;
   const readStdin = async () => {
     let text = "";
     for await (const chunk of stdin) text += chunk;
     return text;
   };
   return {
-    env: process.env,
+    env,
     cwd: process.cwd(),
-    fetch,
+    fetch: spin ? (url, init) => spin.around(fetch(url, init)) : fetch,
     sleep: (ms) => new Promise((done) => setTimeout(done, ms)),
-    out: (text) => stdout.write(`${text}\n`),
-    note: (text) => stderr.write(`${text}\n`),
+    out: (text) => (spin?.clear(), stdout.write(`${text}\n`)),
+    note: (text) => (spin?.clear(), stderr.write(`${text}\n`)),
     readStdin,
     readSecret: () => (stdin.isTTY ? promptSecret() : readStdin()),
     open: openBrowser,
     tty: Boolean(stdout.isTTY),
     width: stdout.columns,
+    style: styleFor(stdout, env),
+    noteStyle,
   };
 }
 
@@ -101,7 +109,7 @@ function parse(argv) {
  * Run the CLI. Returns the exit code: 0 success, 1 API or network error, 2 wrong command.
  * @param {string[]} argv @param {Io} [io]
  */
-export async function run(argv, io = realIo()) {
+export async function run(argv, io = realIo(argv.includes("--json"))) {
   try {
     await main(argv, io);
     return 0;
@@ -112,8 +120,11 @@ export async function run(argv, io = realIo()) {
       const body = e instanceof ApiError && e.body ? e.body : { error: { code: wrongCommand ? "usage" : "network", message: e.message } };
       io.note(json(body));
     } else {
-      io.note(`Error: ${clean(e.message)}`);
-      if (e instanceof ApiError && e.code) io.note(clean(`Code: ${e.code}${e.requestId ? `. Request ID: ${e.requestId}` : ""}`));
+      const s = io.noteStyle ?? PLAIN;
+      // On a terminal, the commands in a message stand out: Run "frontmost login" shows frontmost login in bold.
+      const message = s.on ? clean(e.message).replace(/"(frontmost [^"]+)"/g, (_, c) => s.bold(c)) : clean(e.message);
+      io.note(`${s.errorDot()} ${message}`);
+      if (e instanceof ApiError && e.code) io.note(s.dim(clean(`Code: ${e.code}${e.requestId ? `. Request ID: ${e.requestId}` : ""}`)));
     }
     return wrongCommand ? 2 : 1;
   }
@@ -127,15 +138,16 @@ async function main(argv, io) {
     positionals.shift();
     values.help = true;
   }
-  if (!positionals.length) return io.out(overview());
+  const s = io.style ?? PLAIN;
+  if (!positionals.length) return values.help ? io.out(overview(s)) : start(values, io);
 
   const two = positionals.slice(0, 2).join(" ");
   const name = commandHelp(two) !== null && positionals.length > 1 ? two : positionals[0];
   const args = positionals.slice(name === two ? 2 : 1);
-  const help = commandHelp(name);
+  const help = commandHelp(name, s);
   if (help === null) {
     const choices = group(name);
-    if (choices && values.help) return io.out(choices);
+    if (choices && values.help) return io.out(group(name, s) ?? choices);
     if (choices) throw new UsageError(`"frontmost ${name}" needs one more word:\n${choices}`);
     const close = nearest(name, firstWords());
     throw new UsageError(`"${name}" is not a command. ${close ? `Did you mean "frontmost ${close}"?` : 'Run "frontmost --help" to see the commands.'}`);
@@ -144,12 +156,30 @@ async function main(argv, io) {
 
   if (name === "logout") return logout(io);
   if (name === "login") return login(values, io);
-  const key = apiKey({ flag: str(values["api-key"]), ...io });
-  if (!key && !readSignIn(io.env)) throw new UsageError('Not signed in. Run "frontmost login", or set FRONTMOST_API_KEY.');
-  const base = baseUrl(io.env);
-  const client = { base, token: key ? async () => key : accessToken(io, base), fetch: io.fetch, sleep: io.sleep };
+  const client = signedIn(values, io);
+  if (!client) throw new UsageError('Not signed in. Run "frontmost login", or set FRONTMOST_API_KEY.');
   if (name === "api") return api(client, args, values, io);
   return execute(client, /** @type {import("./spec.js").Command} */ (commands.get(name)), args, values, io);
+}
+
+/** The API client, or null when nothing is signed in. @param {Record<string, unknown>} values @param {Io} io */
+function signedIn(values, io) {
+  const key = apiKey({ flag: str(values["api-key"]), ...io });
+  if (!key && !readSignIn(io.env)) return null;
+  const base = baseUrl(io.env);
+  return { base, token: key ? async () => key : accessToken(io, base), fetch: io.fetch, sleep: io.sleep };
+}
+
+/**
+ * "frontmost" alone. A person at a terminal sees the latest scan, or a welcome before the first sign-in.
+ * A script or an agent gets the help, as before.
+ * @param {Record<string, unknown>} values @param {Io} io
+ */
+async function start(values, io) {
+  const s = io.style ?? PLAIN;
+  if (!io.tty || values.json) return io.out(overview(s));
+  const client = signedIn(values, io);
+  io.out(client ? await home(client, { ...io, project: str(values.project) }, s) : welcome(s));
 }
 
 /** @param {unknown} v */
@@ -165,11 +195,18 @@ async function login(values, io) {
   if (flag || values["with-key"]) {
     const key = checkKey((flag ?? (await io.readSecret())).trim());
     const name = await workspace(key);
-    return io.note(clean(`Signed in to ${name}. Key saved to ${saveKey(io.env, key)}.`));
+    return signedInNote(io, name, `Key saved to ${saveKey(io.env, key)}.`);
   }
   const saved = await signIn(io, base, { browser: values.browser !== false });
   const name = await workspace(saved.access_token);
-  io.note(clean(`Signed in to ${name}. Sign-in saved to ${saveSignIn(io.env, saved)}.`));
+  signedInNote(io, name, `Sign-in saved to ${saveSignIn(io.env, saved)}.`);
+}
+
+/** @param {Io} io @param {unknown} name @param {string} saved */
+function signedInNote(io, name, saved) {
+  const s = io.noteStyle ?? PLAIN;
+  if (!s.on) return io.note(clean(`Signed in to ${name}. ${saved}`));
+  io.note(`Signed in to ${s.bold(clean(name))}. ${s.dim(clean(saved))}\nRun ${s.bold("frontmost")} to see the latest scan.`);
 }
 
 /** @param {Io} io */

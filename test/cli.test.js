@@ -232,10 +232,10 @@ test("without --json a list is a table and one object is key and value lines", a
   assert.match(piped.err, /--cursor abc/);
 
   const screen = await cli(["rivals", "--project", "7"], { tty: true, answer: () => ({ body: list(rows) }) });
-  assert.equal(screen.out, "ID  NAME    VISIBILITY  TAGS  PARENT\n1   Globex  0.4 (4/10)  a, b");
+  assert.equal(screen.out, "ID  Name    Visibility  Tags\n1   Globex  40% (4/10)  a, b");
 
   const one = await cli(["whoami"], { tty: true, answer: () => ({ body: { object: "workspace", name: "Acme", questions: { used: 3, max: 50 }, apps: [{ id: "chatgpt" }] } }) });
-  assert.equal(one.out, "name            Acme\nquestions.used  3\nquestions.max   50\n\napps\nID\nchatgpt");
+  assert.equal(one.out, "Name            Acme\nQuestions used  3\nQuestions max   50\n\nApps\nID\nchatgpt");
 
   // In a pipe, every line of one object is key, tab, value. Text is on one line, and a list inside is one line per field.
   const answer = { object: "answer", id: "9", text: "First line.\n\nSecond\tline.", win_rate: { value: 0.5, numerator: 1, denominator: 2 }, mentions: [{ object: "mention", name: "Globex", position: 1 }] };
@@ -249,7 +249,7 @@ test("without --json a list is a table and one object is key and value lines", a
 
 test("text from the API cannot send control codes to the terminal", async () => {
   const r = await cli(["projects"], { tty: true, answer: () => ({ body: list([{ name: "\u001b[2JAcme\u0007‮", note: "two\nlines" }]) }) });
-  assert.equal(r.out, "NAME     NOTE\n[2JAcme  two lines");
+  assert.equal(r.out, "Name     Note\n[2JAcme  two lines");
   const e = await cli(["whoami"], { answer: () => ({ status: 400, body: { error: { code: "x\u001b[31m", message: "bad\u001b[0m" } } }) });
   assert.ok(!e.err.includes("\u001b"));
   const body = { object: "workspace", name: "A\u001b[2J\u009b31m\u202ecme" };

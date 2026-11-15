@@ -1,6 +1,7 @@
 // Help text, made from the same command list that runs the commands.
 import { KEYS_URL } from "./config.js";
 import { commands, GLOBALS } from "./spec.js";
+import { PLAIN } from "./style.js";
 
 const DOCS_URL = "https://app.frontmost.ai/docs/api.md";
 
@@ -30,44 +31,54 @@ export function usage(c) {
   return parts.filter(Boolean).join(" ");
 }
 
-/** @param {[string, string][]} rows */
-function columns(rows) {
-  const pad = Math.max(...rows.map(([left]) => left.length));
-  return rows.map(([left, right]) => `  ${left.padEnd(pad)}  ${right}`.trimEnd()).join("\n");
+/** @param {[string, string][]} rows @param {import("./style.js").Style} [s] @param {number} [pad] The width of the left column. */
+function columns(rows, s = PLAIN, pad = Math.max(...rows.map(([left]) => left.length))) {
+  return rows.map(([left, right]) => (right ? `  ${left.padEnd(pad)}  ${s.dim(right)}` : `  ${left}`)).join("\n");
 }
 
-/** @param {string[]} names */
-const globals = (names) => columns(names.map((n) => [n === "wait" ? "--no-wait" : `--${n}${GLOBALS[/** @type {keyof typeof GLOBALS} */ (n)].type === "string" ? " <value>" : ""}`, GLOBALS[/** @type {keyof typeof GLOBALS} */ (n)].description]));
+/** @param {string[]} names @returns {[string, string][]} */
+const globalRows = (names) => names.map((n) => [n === "wait" ? "--no-wait" : `--${n}${GLOBALS[/** @type {keyof typeof GLOBALS} */ (n)].type === "string" ? " <value>" : ""}`, GLOBALS[/** @type {keyof typeof GLOBALS} */ (n)].description]);
+/** @param {string[]} names @param {import("./style.js").Style} [s] */
+const globals = (names, s = PLAIN) => columns(globalRows(names), s);
 
-export function overview() {
+/** @param {import("./style.js").Style} [s] On a terminal: the logo, bold headings, and gray descriptions. */
+export function overview(s = PLAIN) {
   const all = [...commands.values()];
   const nouns = [...new Set(all.map((c) => c.name.split(" ")[0]))];
   /** @param {import("./spec.js").Command} c */
   const order = (c) => nouns.indexOf(c.name.split(" ")[0]);
-  /** Commands of one noun stay together. @param {(c: import("./spec.js").Command) => boolean} keep */
-  const rows = (keep) => columns(all.filter(keep).sort((a, b) => order(a) - order(b)).map((c) => [usage(c), c.summary]));
-  return `See how AI apps answer your buyers' questions.
+  /** Commands of one noun stay together. @param {(c: import("./spec.js").Command) => boolean} keep @returns {[string, string][]} */
+  const rows = (keep) => all.filter(keep).sort((a, b) => order(a) - order(b)).map((c) => [usage(c), c.summary]);
+  /** @type {[string, string][]} */
+  const account = Object.values(ACCOUNT).map((a) => [a.usage, a.summary]);
+  const sections = { read: rows((c) => c.method === "GET"), change: rows((c) => c.method !== "GET"), account, options: globalRows(["json", "project", "all", "help", "version"]) };
+  // One left column for every section, so that all descriptions start at the same place.
+  const pad = Math.max(...Object.values(sections).flat().map(([left]) => left.length));
+  /** @param {[string, string][]} list */
+  const col = (list) => columns(list, s, pad);
+  const h = s.bold;
+  return `${s.on ? `${s.logo()}  ` : ""}See how AI apps answer your buyers' questions.
 
-Usage
+${h("Usage")}
   frontmost <command> [options]
 
-Read
-${rows((c) => c.method === "GET")}
+${h("Read")}
+${col(sections.read)}
 
-Change
-${rows((c) => c.method !== "GET")}
+${h("Change")}
+${col(sections.change)}
 
-Account
-${columns(Object.values(ACCOUNT).map((a) => [a.usage, a.summary]))}
+${h("Account")}
+${col(sections.account)}
 
-Options
-${globals(["json", "project", "all", "help", "version"])}
+${h("Options")}
+${col(sections.options)}
 
-Sign in
+${h("Sign in")}
   Run "frontmost login". Your browser opens, and you sign in there.
   For scripts and CI, create an API key at ${KEYS_URL} and set FRONTMOST_API_KEY.
 
-AI agents and scripts
+${h("AI agents and scripts")}
   Add --json to every command. With no sign-in, ask the person to run "frontmost login".
   Exit code 0 is success. 1 is an API or network error. 2 is a wrong command.
   Run "frontmost <command> --help" to see the options of one command.
@@ -81,26 +92,26 @@ function flagRow(f) {
   return /** @type {[string, string]} */ ([left, notes.filter(Boolean).join(". ")]);
 }
 
-/** Help for one command, or null when the name is not a command. @param {string} name */
-export function commandHelp(name) {
+/** Help for one command, or null when the name is not a command. @param {string} name @param {import("./style.js").Style} [s] */
+export function commandHelp(name, s = PLAIN) {
   const account = ACCOUNT[name];
-  if (account) return `${account.summary}\n\nUsage\n  frontmost ${account.usage}${account.more ? `\n\n${account.more}` : ""}`;
+  if (account) return `${account.summary}\n\n${s.bold("Usage")}\n  frontmost ${account.usage}${account.more ? `\n\n${account.more.replace(/^Options$/m, s.bold("Options"))}` : ""}`;
   const c = commands.get(name);
   if (!c) return null;
   const own = [...c.flags.values()].map(flagRow);
   const shared = ["json", c.inProject && "project", c.isList && "all", c.hasBody && "body", c.retryKey && "idempotency-key", c.retryKey && "wait", "api-key"];
   return [
     c.summary,
-    `Usage\n  frontmost ${usage(c)}${own.length ? " [options]" : ""}`,
-    own.length ? `Options\n${columns(own)}` : "",
-    `Other options\n${globals(/** @type {string[]} */ (shared.filter(Boolean)))}`,
+    `${s.bold("Usage")}\n  frontmost ${usage(c)}${own.length ? " [options]" : ""}`,
+    own.length ? `${s.bold("Options")}\n${columns(own, s)}` : "",
+    `${s.bold("Other options")}\n${globals(/** @type {string[]} */ (shared.filter(Boolean)), s)}`,
   ].filter(Boolean).join("\n\n");
 }
 
-/** The commands that start with one word, for "frontmost profiles" when the word alone is not a command. @param {string} noun */
-export function group(noun) {
+/** The commands that start with one word, for "frontmost profiles" when the word alone is not a command. @param {string} noun @param {import("./style.js").Style} [s] */
+export function group(noun, s = PLAIN) {
   const rows = [...commands.values()].filter((c) => c.name.startsWith(`${noun} `)).map((c) => /** @type {[string, string]} */ ([usage(c), c.summary]));
-  return rows.length ? columns(rows) : null;
+  return rows.length ? columns(rows, s) : null;
 }
 
 /**

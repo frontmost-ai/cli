@@ -3,12 +3,28 @@
 See how AI apps answer your buyers' questions, from the terminal.
 
 ```console
-$ frontmost questions
-ID  TEXT                                       TOPIC     ACTIVE  IS_BRANDED  PROFILE_ID
-5   Which bank is best for freelancers?        Business  true    false       2
-4   Which bank has the best business account?  Business  true    false
-1   Is Papaya a good bank for a mortgage?                false   true
+$ frontmost
+
+  ” frontmost   Fieldnote · Scale
+
+  Fieldnote
+  Scan of Oct 5 · 31 answers · 6 AI apps
+
+  Visibility   32%  ●●●●●●●●●●○○○○○○○○○○○○○○○○○○○○○  10 of 31  ▲ 2 pts
+  Win rate      3%  ●○○○○○○○○○○○○○○○○○○○○○○○○○○○○○○   1 of 31  ▼ 10 pts
+  Position     2.4  average place when named · was 2
+
+  Named most
+    1  Waypoint Notes   18 of 31
+    2  Trailbook        16 of 31
+    3  Inkfield         15 of 31
+    ⋮
+    5  You              10 of 31
+
+  Next  frontmost rivals  ·  frontmost answers  ·  frontmost --help
 ```
+
+Run `frontmost` with no command to see your latest scan. Each dot is one answer. A filled dot is an answer that named you. The example uses sample data.
 
 ## Install
 
@@ -117,8 +133,10 @@ Or set `FRONTMOST_PROJECT`. `frontmost projects` lists the IDs.
 | Any route | `frontmost api [METHOD] <path>` calls the [API](https://app.frontmost.ai/docs/api.md) directly. |
 
 Without `--json`, output is a table on a terminal and tab-separated text in a pipe.
-On a terminal, a rate shows its counts: `0.16 (4/25)`. In a pipe, the counts are separate columns, such as `visibility.numerator`.
+On a terminal, a rate shows its counts: `16% (4/25)`. In a pipe, the counts are separate columns, such as `visibility.numerator`.
 In a pipe, one object is one `key<tab>value` line per field, and long text is on one line.
+`frontmost` with no command prints the help in a pipe or with `--json`. Only a terminal gets the scan screen.
+Color is off in a pipe, with `NO_COLOR`, and with `TERM=dumb`. `FORCE_COLOR=1` turns it on.
 
 ## How the CLI signs in
 

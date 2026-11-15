@@ -83,11 +83,24 @@ function signInFrom(body, from) {
   };
 }
 
+// The brand mark: an ink speech bubble with two yellow quote marks (wordmouth site/brand/frontmost-mark.svg).
+const MARK = '<svg width="40" height="40" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 1.5C7.5 1.5 1.5 7.3 1.5 14.6c0 3 1 5.7 2.7 7.9L2.6 28l6-2.1c1.9 1 4.1 1.6 6.4 1.6 7.5 0 13.5-5.8 13.5-13 0-7.2-6-13-13.5-13Z" fill="#111"/><path d="M9.2 10.6h3.4l-2.1 8.2H7.4l1.8-8.2Zm6.4 0H19l-2.1 8.2h-3.1l1.8-8.2Z" fill="#E5F54B"/></svg>';
+
 /** The page that the browser shows last. @param {boolean} done */
-const page = (done) => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Frontmost AI</title>
-<body style="font:16px/1.5 system-ui,sans-serif;max-width:28rem;margin:20vh auto;padding:0 1.5rem;color:#111;background:#fff">
-<h1 style="font-size:1.25rem">${done ? "You are signed in" : "The sign-in did not finish"}</h1>
-<p>${done ? "Close this tab and go back to the terminal." : 'Go back to the terminal and run "frontmost login" again.'}</p>`;
+export const page = (done) => `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Frontmost AI</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FAFAF7;color:#111;font:16px/1.5 Geist,ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+main{box-sizing:border-box;width:min(26rem,100% - 2rem);padding:2.5rem 2rem;background:#fff;border:1px solid rgba(17,17,17,.08);border-radius:20px}
+h1{margin:1.5rem 0 .375rem;font-size:1.375rem;line-height:1.25;font-weight:600;letter-spacing:-.01em}
+p{margin:0;color:#62625C}
+code{display:inline-block;margin-top:1.25rem;padding:.375rem .625rem;border-radius:8px;background:#F2F2EE;font:14px/1.4 "Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;color:#111}
+.dot{display:inline-block;width:.5rem;height:.5rem;margin-right:.5rem;border-radius:50%;background:${done ? "#E5F54B;box-shadow:0 0 0 1px rgba(17,17,17,.16)" : "#B42318"};vertical-align:.1em}
+</style>
+<main>${MARK}
+<h1><span class="dot"></span>${done ? "You are signed in" : "The sign-in did not finish"}</h1>
+<p>${done ? "Close this tab. To see your latest scan, run this in the terminal:" : "Close this tab. To try again, run this in the terminal:"}</p>
+${done ? "<code>frontmost</code>" : "<code>frontmost login</code>"}
+</main></html>`;
 
 /**
  * Open the sign-in page and wait for the browser to come back to this computer.
