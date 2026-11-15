@@ -11,6 +11,1474 @@
     }
   ],
   "components": {
+    "schemas": {
+      "KeyKind": {
+        "type": "string",
+        "enum": [
+          "read",
+          "full"
+        ]
+      },
+      "ScanCadence": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "mwf"
+        ]
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "workspace"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "key_kind": {
+            "$ref": "#/components/schemas/KeyKind"
+          },
+          "questions": {
+            "type": "object",
+            "properties": {
+              "used": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "max": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "used",
+              "max"
+            ],
+            "additionalProperties": false
+          },
+          "projects": {
+            "type": "object",
+            "properties": {
+              "used": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "max": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "used",
+              "max"
+            ],
+            "additionalProperties": false
+          },
+          "profiles": {
+            "type": "object",
+            "properties": {
+              "max_per_project": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "max_per_project"
+            ],
+            "additionalProperties": false
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scanning": {
+            "type": "boolean"
+          },
+          "scan_cadence": {
+            "$ref": "#/components/schemas/ScanCadence"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "name",
+          "plan",
+          "key_kind",
+          "questions",
+          "projects",
+          "profiles",
+          "apps",
+          "scanning",
+          "scan_cadence"
+        ],
+        "additionalProperties": false
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "project"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scanning": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "name",
+          "domain",
+          "apps",
+          "scanning",
+          "created_at",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "question"
+          },
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "is_branded": {
+            "description": "Null while Frontmost AI has not decided whether the question names the brand",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "profile_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "text",
+          "topic",
+          "active",
+          "is_branded",
+          "profile_id"
+        ],
+        "additionalProperties": false
+      },
+      "ProjectList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "QuestionList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "ScanStatus": {
+        "type": "string",
+        "enum": [
+          "done",
+          "partial"
+        ]
+      },
+      "Scan": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "scan"
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "description": "partial: some answers failed, and the scan counts the answers it has",
+            "$ref": "#/components/schemas/ScanStatus"
+          },
+          "delivered_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "status",
+          "delivered_at",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "ProjectSetup": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "project_setup"
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "drafting"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "retry_after": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Seconds to wait before sending `next`"
+          },
+          "next": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "const": "POST"
+              },
+              "path": {
+                "type": "string"
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "setup_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "setup_id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "method",
+              "path",
+              "body"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "status",
+          "domain",
+          "retry_after",
+          "next"
+        ],
+        "additionalProperties": false,
+        "description": "The site read is still running. Send `next` after `retry_after` seconds."
+      },
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "numerator / denominator, from 0 to 1. Null with no answers",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "numerator": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "denominator": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "previous": {
+            "description": "The same rate in the comparison period. Null with no comparison",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "numerator",
+          "denominator",
+          "previous"
+        ],
+        "additionalProperties": false,
+        "description": "A rate with its counts, such as 8 of 36 answers"
+      },
+      "Position": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "answers": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "previous": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "answers",
+          "previous"
+        ],
+        "additionalProperties": false,
+        "description": "The average first-mention place over `answers` answers with a known place. 1 is first"
+      },
+      "Figures": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "win_rate": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Positive statements over classified statements. Null before Sentiment existed"
+          }
+        },
+        "required": [
+          "visibility",
+          "win_rate",
+          "position",
+          "sentiment"
+        ],
+        "additionalProperties": false
+      },
+      "Period": {
+        "type": "string",
+        "enum": [
+          "scan",
+          "week",
+          "month"
+        ]
+      },
+      "QuestionSet": {
+        "type": "string",
+        "enum": [
+          "all",
+          "branded",
+          "unbranded"
+        ]
+      },
+      "Scope": {
+        "type": "object",
+        "properties": {
+          "scan_id": {
+            "type": "string"
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Period"
+              },
+              "start": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
+          },
+          "scans_counted": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "questions": {
+            "$ref": "#/components/schemas/QuestionSet"
+          },
+          "compare_to": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "previous"
+                  },
+                  "start": {
+                    "type": "string"
+                  },
+                  "end": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "start",
+                  "end"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "definitions_version": {
+            "type": "string",
+            "description": "Changes when a counting rule changes"
+          }
+        },
+        "required": [
+          "scan_id",
+          "period",
+          "scans_counted",
+          "apps",
+          "questions",
+          "compare_to",
+          "definitions_version"
+        ],
+        "additionalProperties": false,
+        "description": "What the numbers count"
+      },
+      "MetricsGroup": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "description": "With group_by=app",
+            "type": "string"
+          },
+          "scan_id": {
+            "description": "With group_by=scan",
+            "type": "string"
+          },
+          "delivered_at": {
+            "description": "With group_by=scan",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "win_rate": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Positive statements over classified statements. Null before Sentiment existed"
+          }
+        },
+        "required": [
+          "visibility",
+          "win_rate",
+          "position",
+          "sentiment"
+        ],
+        "additionalProperties": false
+      },
+      "Metrics": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "metrics"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totals": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Figures"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "groups": {
+            "description": "With group_by",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricsGroup"
+            }
+          },
+          "message": {
+            "description": "Why scope and totals are null",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "scope",
+          "totals"
+        ],
+        "additionalProperties": false
+      },
+      "Rival": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "rival"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "win_rate": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "named_instead_of_you": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Answers that named this rival and not you"
+          },
+          "average_position": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "share_of_voice": {
+            "$ref": "#/components/schemas/Rate"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "name",
+          "domain",
+          "visibility",
+          "win_rate",
+          "named_instead_of_you",
+          "average_position",
+          "share_of_voice"
+        ],
+        "additionalProperties": false
+      },
+      "Channel": {
+        "type": "string",
+        "enum": [
+          "own_website",
+          "competitor_sites",
+          "editorial",
+          "review_sites",
+          "reddit",
+          "youtube",
+          "linkedin",
+          "forums",
+          "directories",
+          "reference",
+          "company_sites",
+          "other"
+        ]
+      },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "source"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "citations": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "answers": {
+            "$ref": "#/components/schemas/Rate"
+          },
+          "own_site": {
+            "type": "boolean"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Channel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "named_you": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Answers that cited this site and named you"
+          }
+        },
+        "required": [
+          "object",
+          "domain",
+          "citations",
+          "answers",
+          "own_site",
+          "channel",
+          "named_you"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "ok",
+          "no_answer",
+          "failed"
+        ]
+      },
+      "Sentiment": {
+        "type": "string",
+        "enum": [
+          "positive",
+          "neutral",
+          "mixed",
+          "negative"
+        ]
+      },
+      "AnswerSummary": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "answer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "scan_id": {
+            "type": "string"
+          },
+          "app": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AnswerStatus"
+          },
+          "question": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "named": {
+            "description": "Whether the answer named you. Null unless status is ok",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "position": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sentiment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asked_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "scan_id",
+          "app",
+          "status",
+          "question",
+          "named",
+          "position",
+          "sentiment",
+          "asked_at",
+          "url"
+        ],
+        "additionalProperties": false,
+        "description": "One answer without its text. Get the answer to read it"
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "answer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "scan_id": {
+            "type": "string"
+          },
+          "app": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AnswerStatus"
+          },
+          "question": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "named": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "position": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sentiment"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asked_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mentions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "rival_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "you": {
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "name",
+                "rival_id",
+                "you",
+                "position"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Each business once, in order of first mention"
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "domain": {
+                  "type": "string"
+                },
+                "own_site": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "url",
+                "domain",
+                "own_site"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "project_id",
+          "scan_id",
+          "app",
+          "status",
+          "question",
+          "named",
+          "position",
+          "sentiment",
+          "asked_at",
+          "text",
+          "mentions",
+          "citations",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "RecommendationStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "done",
+          "dismissed"
+        ]
+      },
+      "Recommendation": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "recommendation"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "evidence_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/RecommendationStatus"
+          },
+          "result": {
+            "description": "After it is marked done: whether the site names you now",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "title",
+          "action",
+          "why",
+          "evidence",
+          "evidence_url",
+          "start_url",
+          "status",
+          "result",
+          "url"
+        ],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "profile"
+          },
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "who": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "project_id",
+          "name",
+          "who"
+        ],
+        "additionalProperties": false
+      },
+      "AddedQuestion": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "question"
+          },
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "is_branded": {
+            "description": "Null while Frontmost AI has not decided whether the question names the brand",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "profile_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created": {
+            "type": "boolean",
+            "description": "False when the project already had this question"
+          }
+        },
+        "required": [
+          "object",
+          "id",
+          "text",
+          "topic",
+          "active",
+          "is_branded",
+          "profile_id",
+          "created"
+        ],
+        "additionalProperties": false
+      },
+      "ScanList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Scan"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "RivalList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rival"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "description": "Why the list is empty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "SourceList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "description": "Why the list is empty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "AnswerList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnswerSummary"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "description": "Why the list is empty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "RecommendationList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "ProfileList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Profile"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "AddedQuestionList": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "const": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddedQuestion"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      }
+    },
     "securitySchemes": {
       "bearer": {
         "type": "http",
@@ -23,7 +1491,10 @@
     "/workspace": {
       "get": {
         "summary": "The workspace's plan, limits, and use",
-        "operationId": "getWorkspace",
+        "operationId": "workspace.get",
+        "tags": [
+          "workspace"
+        ],
         "security": [
           {
             "bearer": []
@@ -36,7 +1507,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Workspace"
                 }
               }
             }
@@ -109,7 +1580,10 @@
     "/projects": {
       "get": {
         "summary": "List projects",
-        "operationId": "getProjects",
+        "operationId": "projects.list",
+        "tags": [
+          "projects"
+        ],
         "security": [
           {
             "bearer": []
@@ -155,7 +1629,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProjectList"
                 }
               }
             }
@@ -226,7 +1700,10 @@
       },
       "post": {
         "summary": "Create a project from a website, or continue a setup",
-        "operationId": "postProjects",
+        "operationId": "projects.create",
+        "tags": [
+          "projects"
+        ],
         "security": [
           {
             "bearer": []
@@ -237,7 +1714,7 @@
             "name": "Idempotency-Key",
             "in": "header",
             "required": false,
-            "description": "Required when the body has no setup_id. A new random string for each new request.",
+            "description": "Required when the body has no setup_id. A new random string for each new request, the same string for a retry. A retry gets the first reply.",
             "schema": {
               "type": "string",
               "maxLength": 255
@@ -313,13 +1790,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             }
           },
           "202": {
-            "description": "The site read is still running. Send body.next after Retry-After seconds."
+            "description": "Still working. Send body.next after Retry-After seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectSetup"
+                }
+              }
+            }
           },
           "default": {
             "description": "Error",
@@ -389,7 +1873,10 @@
     "/projects/{id}": {
       "get": {
         "summary": "One project",
-        "operationId": "getProjectsId",
+        "operationId": "projects.get",
+        "tags": [
+          "projects"
+        ],
         "security": [
           {
             "bearer": []
@@ -411,7 +1898,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             }
@@ -482,7 +1969,10 @@
       },
       "patch": {
         "summary": "Rename a project, or start or stop its scans",
-        "operationId": "patchProjectsId",
+        "operationId": "projects.update",
+        "tags": [
+          "projects"
+        ],
         "security": [
           {
             "bearer": []
@@ -528,7 +2018,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             }
@@ -601,7 +2091,10 @@
     "/projects/{id}/scans": {
       "get": {
         "summary": "Delivered scans, newest first",
-        "operationId": "getProjectsIdScans",
+        "operationId": "scans.list",
+        "tags": [
+          "scans"
+        ],
         "security": [
           {
             "bearer": []
@@ -654,7 +2147,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ScanList"
                 }
               }
             }
@@ -727,7 +2220,10 @@
     "/projects/{id}/metrics": {
       "get": {
         "summary": "Visibility, Win Rate, Position, and Sentiment",
-        "operationId": "getProjectsIdMetrics",
+        "operationId": "metrics.get",
+        "tags": [
+          "metrics"
+        ],
         "security": [
           {
             "bearer": []
@@ -826,7 +2322,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Metrics"
                 }
               }
             }
@@ -899,7 +2395,10 @@
     "/projects/{id}/rivals": {
       "get": {
         "summary": "Rivals the answers named, most named first",
-        "operationId": "getProjectsIdRivals",
+        "operationId": "rivals.list",
+        "tags": [
+          "rivals"
+        ],
         "security": [
           {
             "bearer": []
@@ -1007,7 +2506,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RivalList"
                 }
               }
             }
@@ -1080,7 +2579,10 @@
     "/projects/{id}/answers": {
       "get": {
         "summary": "List answers. Get one answer to read its text",
-        "operationId": "getProjectsIdAnswers",
+        "operationId": "answers.list",
+        "tags": [
+          "answers"
+        ],
         "security": [
           {
             "bearer": []
@@ -1231,7 +2733,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AnswerList"
                 }
               }
             }
@@ -1304,7 +2806,10 @@
     "/answers/{id}": {
       "get": {
         "summary": "One answer with its text and citations",
-        "operationId": "getAnswersId",
+        "operationId": "answers.get",
+        "tags": [
+          "answers"
+        ],
         "security": [
           {
             "bearer": []
@@ -1326,7 +2831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Answer"
                 }
               }
             }
@@ -1399,7 +2904,10 @@
     "/projects/{id}/sources": {
       "get": {
         "summary": "Sites the answers cited, most cited first",
-        "operationId": "getProjectsIdSources",
+        "operationId": "sources.list",
+        "tags": [
+          "sources"
+        ],
         "security": [
           {
             "bearer": []
@@ -1540,7 +3048,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/SourceList"
                 }
               }
             }
@@ -1613,7 +3121,10 @@
     "/projects/{id}/questions": {
       "get": {
         "summary": "The project's questions",
-        "operationId": "getProjectsIdQuestions",
+        "operationId": "questions.list",
+        "tags": [
+          "questions"
+        ],
         "security": [
           {
             "bearer": []
@@ -1670,7 +3181,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/QuestionList"
                 }
               }
             }
@@ -1741,7 +3252,10 @@
       },
       "post": {
         "summary": "Add questions",
-        "operationId": "postProjectsIdQuestions",
+        "operationId": "questions.create",
+        "tags": [
+          "questions"
+        ],
         "security": [
           {
             "bearer": []
@@ -1754,6 +3268,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "A new random string for each new request, the same string for a retry. A retry gets the first reply.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
             }
           }
         ],
@@ -1826,7 +3350,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/AddedQuestionList"
                 }
               }
             }
@@ -1899,7 +3423,10 @@
     "/projects/{id}/recommendations": {
       "get": {
         "summary": "The project's recommendations, open first",
-        "operationId": "getProjectsIdRecommendations",
+        "operationId": "recommendations.list",
+        "tags": [
+          "recommendations"
+        ],
         "security": [
           {
             "bearer": []
@@ -1957,7 +3484,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RecommendationList"
                 }
               }
             }
@@ -2030,7 +3557,10 @@
     "/projects/{id}/profiles": {
       "get": {
         "summary": "The project's buyer profiles",
-        "operationId": "getProjectsIdProfiles",
+        "operationId": "profiles.list",
+        "tags": [
+          "profiles"
+        ],
         "security": [
           {
             "bearer": []
@@ -2074,7 +3604,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProfileList"
                 }
               }
             }
@@ -2145,7 +3675,10 @@
       },
       "post": {
         "summary": "Add a buyer profile",
-        "operationId": "postProjectsIdProfiles",
+        "operationId": "profiles.create",
+        "tags": [
+          "profiles"
+        ],
         "security": [
           {
             "bearer": []
@@ -2158,6 +3691,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "A new random string for each new request, the same string for a retry. A retry gets the first reply.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
             }
           }
         ],
@@ -2195,7 +3738,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Profile"
                 }
               }
             }
@@ -2268,7 +3811,10 @@
     "/projects/{id}/questions/{question_id}": {
       "patch": {
         "summary": "Reword, move, pause, or resume a question",
-        "operationId": "patchProjectsIdQuestionsQuestion_id",
+        "operationId": "questions.update",
+        "tags": [
+          "questions"
+        ],
         "security": [
           {
             "bearer": []
@@ -2335,7 +3881,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Question"
                 }
               }
             }
@@ -2408,7 +3954,10 @@
     "/profiles/{id}": {
       "patch": {
         "summary": "Rename or describe a buyer profile",
-        "operationId": "patchProfilesId",
+        "operationId": "profiles.update",
+        "tags": [
+          "profiles"
+        ],
         "security": [
           {
             "bearer": []
@@ -2455,7 +4004,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Profile"
                 }
               }
             }
@@ -2526,7 +4075,10 @@
       },
       "delete": {
         "summary": "Remove a buyer profile; its questions stay",
-        "operationId": "deleteProfilesId",
+        "operationId": "profiles.delete",
+        "tags": [
+          "profiles"
+        ],
         "security": [
           {
             "bearer": []
@@ -2614,7 +4166,10 @@
     "/recommendations/{id}": {
       "patch": {
         "summary": "Mark a recommendation done or dismissed, or open it again",
-        "operationId": "patchRecommendationsId",
+        "operationId": "recommendations.update",
+        "tags": [
+          "recommendations"
+        ],
         "security": [
           {
             "bearer": []
@@ -2662,7 +4217,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/Recommendation"
                 }
               }
             }
