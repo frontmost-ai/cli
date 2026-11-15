@@ -8,7 +8,7 @@ export const spec = read("openapi.json");
 export const VERSION = read("package.json").version;
 
 /**
- * @typedef {{ name: string, key: string, in: "query" | "body" | "item", type: "string" | "integer" | "boolean", enum?: string[], nullable: boolean, default?: unknown, description: string }} Flag
+ * @typedef {{ name: string, key: string, in: "query" | "body" | "item", parent?: string, type: "string" | "integer" | "boolean" | "list", enum?: string[], deprecated?: boolean, nullable: boolean, default?: unknown, description: string }} Flag
  * @typedef {{ name: string, method: string, path: string, summary: string, inProject: boolean, args: string[], flags: Map<string, Flag>, hasBody: boolean, required: string[], positional?: { field: string, list?: string, label: string }, preset?: Record<string, unknown>, isList: boolean, retryKey: boolean }} Command
  */
 
@@ -35,7 +35,7 @@ const SHORTCUTS = /** @type {Record<string, { of: string, preset: Record<string,
 export const dashed = (name) => name.replaceAll("_", "-").toLowerCase();
 
 /**
- * The flag type for a schema, or null when the value is not one string, number, or true/false.
+ * The flag type for a schema, or null when the value is not one string, number, true/false, or list of strings.
  * @param {any} schema
  */
 function scalar(schema) {
@@ -48,6 +48,7 @@ function scalar(schema) {
   if (s.type === "boolean" || trueFalse) return { type: /** @type {const} */ ("boolean"), nullable };
   if (s.type === "integer") return { type: /** @type {const} */ ("integer"), nullable, default: s.default };
   if (s.type === "string") return { type: /** @type {const} */ ("string"), nullable, enum: s.enum, default: s.default };
+  if (s.type === "array" && s.items?.type === "string") return { type: /** @type {const} */ ("list"), nullable, enum: s.items.enum };
   return null;
 }
 
@@ -70,13 +71,20 @@ function command(method, path, op) {
 
   /** @type {Map<string, Flag>} */
   const flags = new Map();
-  /** @param {string} key @param {any} schema @param {Flag["in"]} where @param {string} [description] */
-  const add = (key, schema, where, description = "") => {
+  /** @param {string} key @param {any} schema @param {Flag["in"]} where @param {string} [description] @param {string} [parent] */
+  const add = (key, schema, where, description = "", parent) => {
     const type = scalar(schema);
-    if (type) flags.set(dashed(key), { name: dashed(key), key, in: where, description, ...type });
+    if (!type) return;
+    const name = dashed(key);
+    const taken = flags.get(name);
+    // A member of a body object, such as run_config.cadence, takes the name of the older top-level field it replaces.
+    if (taken && !(parent && taken.deprecated)) throw new Error(`Two fields of ${method.toUpperCase()} ${path} map to --${name}`);
+    flags.set(name, { name, key, in: where, parent, description, deprecated: schema.deprecated === true, ...type });
   };
   for (const p of params) if (p.in === "query") add(p.name, p.schema, "query", p.description);
   for (const [key, schema] of Object.entries(body?.properties ?? {})) add(key, schema, "body", schema.description);
+  for (const [parent, schema] of Object.entries(body?.properties ?? {}))
+    for (const [key, member] of Object.entries(schema.type === "object" ? (schema.properties ?? {}) : {})) add(key, member, "body", member.description, parent);
   if (positional?.list) {
     const item = body.properties[positional.list].items;
     for (const [key, schema] of Object.entries(item.properties)) if (key !== positional.field) add(key, schema, "item", schema.description);

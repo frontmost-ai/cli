@@ -12,6 +12,122 @@
   ],
   "components": {
     "schemas": {
+      "CreditStatus": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "low",
+          "out"
+        ]
+      },
+      "Credits": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "credits": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "monthly_usd": {
+                "type": "string"
+              },
+              "annual_usd": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "credits",
+              "monthly_usd",
+              "annual_usd"
+            ],
+            "additionalProperties": false
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Credits left now: the monthly credits and top-ups, less what running work holds"
+          },
+          "monthly_remaining": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "The part of `remaining` that ends at `cycle_resets_at`"
+          },
+          "topup_remaining": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "The part of `remaining` from top-ups, which last 12 months"
+          },
+          "cycle_resets_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projected_monthly_use": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Credits used this cycle plus what the project schedules use before the reset"
+          },
+          "ask_last_30_days": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Credits Ask used in the last 30 days. Not in `projected_monthly_use`"
+          },
+          "status": {
+            "description": "low: 80% of this cycle's credits are used. out: fewer than 10 left, so no scan can start",
+            "$ref": "#/components/schemas/CreditStatus"
+          },
+          "auto_topup": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "monthly_limit_usd": {
+                "type": "string"
+              },
+              "spent_this_cycle_usd": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "enabled",
+              "monthly_limit_usd",
+              "spent_this_cycle_usd"
+            ],
+            "additionalProperties": false,
+            "description": "Change it on the Billing page"
+          }
+        },
+        "required": [
+          "step",
+          "remaining",
+          "monthly_remaining",
+          "topup_remaining",
+          "cycle_resets_at",
+          "projected_monthly_use",
+          "ask_last_30_days",
+          "status",
+          "auto_topup"
+        ],
+        "additionalProperties": false,
+        "description": "The workspace's credits"
+      },
       "KeyKind": {
         "type": "string",
         "enum": [
@@ -53,16 +169,10 @@
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
-              },
-              "max": {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
               }
             },
             "required": [
-              "used",
-              "max"
+              "used"
             ],
             "additionalProperties": false
           },
@@ -111,6 +221,17 @@
           },
           "scan_cadence": {
             "$ref": "#/components/schemas/ScanCadence"
+          },
+          "credits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Credits"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for a person who sees only some of the workspace's projects"
           }
         },
         "required": [
@@ -124,9 +245,155 @@
           "profiles",
           "apps",
           "scanning",
-          "scan_cadence"
+          "scan_cadence",
+          "credits"
         ],
         "additionalProperties": false
+      },
+      "ProjectCadence": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "mwf",
+          "weekly",
+          "off"
+        ]
+      },
+      "RunConfigChange": {
+        "type": "object",
+        "properties": {
+          "apps": {
+            "description": "The AI apps each scan asks, such as chatgpt and gemini",
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cadence": {
+            "description": "How often the scans run. mwf is Monday, Wednesday, and Friday. weekly is Monday",
+            "$ref": "#/components/schemas/ProjectCadence"
+          },
+          "weekly_brief": {
+            "description": "Write a brief after each Monday scan",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The fields to set. A field left out keeps its value. On a new project, it takes the default: the workspace's `apps`, the workspace's `scan_cadence`, and `weekly_brief` true"
+      },
+      "RunCost": {
+        "type": "object",
+        "properties": {
+          "rates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "app": {
+                  "type": "string"
+                },
+                "credits_per_answer": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "app",
+                "credits_per_answer"
+              ],
+              "additionalProperties": false
+            },
+            "description": "The credits one answer uses in each AI app, at today's rate"
+          },
+          "minimum_per_scan": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "The fewest credits a scan uses"
+          },
+          "per_scan": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "max(active_questions × the sum of the rates, minimum_per_scan)"
+          },
+          "scans_per_month": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Scans in the longest month: daily 31, mwf 14, weekly 5, off 0"
+          },
+          "per_brief": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Credits for one weekly brief"
+          },
+          "briefs_per_month": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Briefs in the longest month: 5 Mondays when weekly_brief is on and the scans run, else 0"
+          },
+          "monthly_max": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "per_scan × scans_per_month + per_brief × briefs_per_month. The most credits a calendar month uses. Ask is billed per message and is not in it"
+          }
+        },
+        "required": [
+          "rates",
+          "minimum_per_scan",
+          "per_scan",
+          "scans_per_month",
+          "per_brief",
+          "briefs_per_month",
+          "monthly_max"
+        ],
+        "additionalProperties": false,
+        "description": "The credits the run config uses. Every number in monthly_max is here"
+      },
+      "RunConfig": {
+        "type": "object",
+        "properties": {
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The AI apps each scan asks"
+          },
+          "cadence": {
+            "description": "How often the scans run. mwf is Monday, Wednesday, and Friday. weekly is Monday",
+            "$ref": "#/components/schemas/ProjectCadence"
+          },
+          "weekly_brief": {
+            "type": "boolean",
+            "description": "Whether a brief is written after each Monday scan"
+          },
+          "active_questions": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Questions each scan asks. Change them with the questions routes"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/RunCost"
+          }
+        },
+        "required": [
+          "apps",
+          "cadence",
+          "weekly_brief",
+          "active_questions",
+          "cost"
+        ],
+        "additionalProperties": false,
+        "description": "What the project's scans ask, how often they run, and the credits that uses. Change it with PATCH /projects/{id}"
       },
       "Project": {
         "type": "object",
@@ -147,14 +414,38 @@
               "null"
             ]
           },
+          "run_config": {
+            "$ref": "#/components/schemas/RunConfig"
+          },
           "apps": {
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "description": "Older field. The same as run_config.apps",
+            "deprecated": true
           },
           "scanning": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Older field. True when run_config.cadence is not off",
+            "deprecated": true
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "daily",
+              "mwf",
+              "weekly",
+              "off"
+            ],
+            "description": "Older field. The same as run_config.cadence",
+            "deprecated": true,
+            "$ref": "#/components/schemas/ProjectCadence"
+          },
+          "weekly_brief": {
+            "type": "boolean",
+            "description": "Older field. The same as run_config.weekly_brief",
+            "deprecated": true
           },
           "created_at": {
             "type": [
@@ -171,8 +462,11 @@
           "id",
           "name",
           "domain",
+          "run_config",
           "apps",
           "scanning",
+          "cadence",
+          "weekly_brief",
           "created_at",
           "url"
         ],
@@ -368,6 +662,10 @@
                 "properties": {
                   "setup_id": {
                     "type": "string"
+                  },
+                  "run_config": {
+                    "description": "The run_config you sent. Nothing keeps it between calls",
+                    "$ref": "#/components/schemas/RunConfigChange"
                   }
                 },
                 "required": [
@@ -1544,7 +1842,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -1666,7 +1964,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -1777,6 +2075,36 @@
                       ],
                       "additionalProperties": false
                     }
+                  },
+                  "run_config": {
+                    "type": "object",
+                    "properties": {
+                      "apps": {
+                        "description": "The AI apps each scan asks, such as chatgpt and gemini",
+                        "minItems": 1,
+                        "maxItems": 12,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "cadence": {
+                        "type": "string",
+                        "enum": [
+                          "daily",
+                          "mwf",
+                          "weekly",
+                          "off"
+                        ],
+                        "description": "How often the scans run. mwf is Monday, Wednesday, and Friday. weekly is Monday"
+                      },
+                      "weekly_brief": {
+                        "description": "Write a brief after each Monday scan",
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "The fields to set. A field left out keeps its value. On a new project, it takes the default: the workspace's `apps`, the workspace's `scan_cadence`, and `weekly_brief` true"
                   }
                 },
                 "additionalProperties": false
@@ -1837,7 +2165,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -1935,7 +2263,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -1968,7 +2296,7 @@
         }
       },
       "patch": {
-        "summary": "Rename a project, or start or stop its scans",
+        "summary": "Rename a project, or change its run config",
         "operationId": "projects.update",
         "tags": [
           "projects"
@@ -2002,8 +2330,65 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
+                  "run_config": {
+                    "type": "object",
+                    "properties": {
+                      "apps": {
+                        "description": "The AI apps each scan asks, such as chatgpt and gemini",
+                        "minItems": 1,
+                        "maxItems": 12,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "cadence": {
+                        "type": "string",
+                        "enum": [
+                          "daily",
+                          "mwf",
+                          "weekly",
+                          "off"
+                        ],
+                        "description": "How often the scans run. mwf is Monday, Wednesday, and Friday. weekly is Monday"
+                      },
+                      "weekly_brief": {
+                        "description": "Write a brief after each Monday scan",
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "The fields to set. A field left out keeps its value. On a new project, it takes the default: the workspace's `apps`, the workspace's `scan_cadence`, and `weekly_brief` true"
+                  },
                   "scanning": {
-                    "description": "Start or stop the scans",
+                    "description": "Older field. Use run_config.cadence. true is daily, false is off",
+                    "deprecated": true,
+                    "type": "boolean"
+                  },
+                  "apps": {
+                    "description": "Older field. Use run_config.apps",
+                    "deprecated": true,
+                    "minItems": 1,
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "cadence": {
+                    "description": "Older field. Use run_config.cadence. It wins over scanning",
+                    "deprecated": true,
+                    "type": "string",
+                    "enum": [
+                      "daily",
+                      "mwf",
+                      "weekly",
+                      "off"
+                    ]
+                  },
+                  "weekly_brief": {
+                    "description": "Older field. Use run_config.weekly_brief",
+                    "deprecated": true,
                     "type": "boolean"
                   }
                 },
@@ -2055,7 +2440,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -2184,7 +2569,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -2359,7 +2744,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -2543,7 +2928,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -2770,7 +3155,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -2868,7 +3253,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3085,7 +3470,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3218,7 +3603,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3387,7 +3772,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3521,7 +3906,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3641,7 +4026,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3775,7 +4160,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -3918,7 +4303,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -4041,7 +4426,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -4130,7 +4515,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",
@@ -4254,7 +4639,7 @@
                             "request_in_progress",
                             "invalid_param",
                             "invalid_cursor",
-                            "question_limit",
+                            "no_credits",
                             "project_limit",
                             "profile_limit",
                             "site_unreadable",

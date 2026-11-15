@@ -74,11 +74,11 @@ frontmost recommendations        What to do next
 **Change.** Needs a Read and Write key.
 
 ```
-frontmost projects create <domain>          Start tracking a website
-frontmost projects update                   Rename a project, or start or stop its scans
+frontmost projects create <domain>          Start tracking a website. Add --apps, --cadence, or --no-weekly-brief
+frontmost projects update                   Rename a project, or change its AI apps, cadence, or weekly brief
 frontmost questions add "<question>"...     Add questions
 frontmost questions update <id>             Reword or move a question
-frontmost questions pause <id>              Pause a question. It keeps its history and frees room in the plan
+frontmost questions pause <id>              Pause a question. It keeps its history and uses no credits
 frontmost questions resume <id>             Ask a paused question again
 frontmost profiles add <name>               Add a buyer profile
 frontmost profiles update <id>              Rename or describe a buyer profile
@@ -98,6 +98,9 @@ frontmost metrics --period week --questions unbranded
 
 # ChatGPT answers that did not name you
 frontmost answers --app chatgpt --no-named
+
+# Ask ChatGPT and Gemini on Monday, Wednesday, and Friday. The reply's run_config.cost.monthly_max is the most credits a month
+frontmost projects update --apps chatgpt,gemini --cadence mwf --json
 
 # Review sites that the answers cited
 frontmost sources --channel review_sites

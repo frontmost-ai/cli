@@ -250,6 +250,12 @@ function convert(flag, value) {
     if (!/^\d+$/.test(String(value))) throw new UsageError(`--${flag.name} must be a whole number.`);
     return query ? value : Number(value);
   }
+  if (flag.type === "list") {
+    const items = String(value).split(",").map((v) => v.trim()).filter(Boolean);
+    const wrong = flag.enum && items.find((v) => !flag.enum?.includes(v));
+    if (!items.length || wrong) throw new UsageError(`--${flag.name} takes a comma-separated list${flag.enum ? ` of: ${flag.enum.join(", ")}` : ""}.`);
+    return items;
+  }
   if (flag.enum && !flag.enum.includes(String(value))) throw new UsageError(`--${flag.name} must be one of: ${flag.enum.join(", ")}.`);
   return value === "" && flag.nullable && !query ? null : value;
 }
@@ -285,10 +291,11 @@ async function execute(client, cmd, args, values, io) {
     if (name in GLOBALS) continue;
     const flag = cmd.flags.get(name);
     if (!flag) {
-      const close = nearest(name, cmd.flags.keys());
+      const close = nearest(name, [...cmd.flags.keys()]);
       throw wrong(`--${name} is not an option of this command.${close ? ` Did you mean --${close}?` : ""}`);
     }
-    const target = flag.in === "query" ? query : flag.in === "item" ? item : body;
+    const top = /** @type {Record<string, any>} */ (body);
+    const target = flag.in === "query" ? query : flag.in === "item" ? item : flag.parent ? (top[flag.parent] ??= {}) : body;
     /** @type {Record<string, unknown>} */ (target)[flag.key] = convert(flag, value);
   }
 

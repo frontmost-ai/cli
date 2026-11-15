@@ -87,7 +87,7 @@ ${h("AI agents and scripts")}
 
 /** @param {import("./spec.js").Flag} f */
 function flagRow(f) {
-  const left = f.type === "boolean" ? `--${f.name}, --no-${f.name}` : `--${f.name} <${f.enum ? f.enum.join("|") : f.type === "integer" ? "number" : "text"}>`;
+  const left = f.type === "boolean" ? `--${f.name}, --no-${f.name}` : `--${f.name} <${f.type === "list" ? `${f.enum ? f.enum.join("|") : "text"},...` : f.enum ? f.enum.join("|") : f.type === "integer" ? "number" : "text"}>`;
   const notes = [f.description, f.default === undefined ? "" : `Default: ${f.default}`, f.nullable && f.in === "body" ? 'Use "" to clear it' : ""];
   return /** @type {[string, string]} */ ([left, notes.filter(Boolean).join(". ")]);
 }
@@ -98,7 +98,8 @@ export function commandHelp(name, s = PLAIN) {
   if (account) return `${account.summary}\n\n${s.bold("Usage")}\n  frontmost ${account.usage}${account.more ? `\n\n${account.more.replace(/^Options$/m, s.bold("Options"))}` : ""}`;
   const c = commands.get(name);
   if (!c) return null;
-  const own = [...c.flags.values()].map(flagRow);
+  // A deprecated flag still works, so older scripts run, but help shows only the current options.
+  const own = [...c.flags.values()].filter((f) => !f.deprecated).map(flagRow);
   const shared = ["json", c.inProject && "project", c.isList && "all", c.hasBody && "body", c.retryKey && "idempotency-key", c.retryKey && "wait", "api-key"];
   return [
     c.summary,

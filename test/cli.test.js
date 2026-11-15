@@ -135,6 +135,14 @@ test("update commands send only the named fields. An empty value clears a field"
   assert.equal(p.requests[0].path, "/projects/7");
   assert.deepEqual(p.requests[0].body, { scanning: true, name: "Acme" });
 
+  const run = await cli(["projects", "update", "7", "--apps", "chatgpt, gemini", "--cadence", "mwf", "--no-weekly-brief"]);
+  assert.deepEqual(run.requests[0].body, { run_config: { apps: ["chatgpt", "gemini"], cadence: "mwf", weekly_brief: false } }, "run_config members are flags");
+  const merged = await cli(["projects", "update", "7", "--body", '{"run_config":{"apps":["chatgpt"]}}', "--cadence", "off"]);
+  assert.deepEqual(merged.requests[0].body, { run_config: { apps: ["chatgpt"], cadence: "off" } });
+  const empty = await cli(["projects", "update", "7", "--apps", ","]);
+  assert.equal(empty.code, 2);
+  assert.equal(empty.requests.length, 0);
+
   const b = await cli(["profiles", "update", "4", "--body", '{"name":"Old","who":"Buyers"}', "--name", "New"]);
   assert.deepEqual(b.requests[0].body, { name: "New", who: "Buyers" });
 

@@ -36,6 +36,10 @@ test("every query param and every simple body field is a flag", () => {
   const answers = commands.get("answers");
   assert.deepEqual([...(answers?.flags.keys() ?? [])], ["scan-id", "period", "app", "questions", "compare-to", "limit", "cursor", "question-id", "rival-id", "named", "cited-domain"]);
   assert.equal(answers?.flags.get("named")?.type, "boolean");
-  assert.deepEqual([...(commands.get("projects create")?.flags.keys() ?? [])], ["domain", "setup-id", "country", "language"]);
+  assert.deepEqual([...(commands.get("projects create")?.flags.keys() ?? [])], ["domain", "setup-id", "country", "language", "apps", "cadence", "weekly-brief"]);
+  const update = commands.get("projects update");
+  assert.equal(update?.flags.get("cadence")?.parent, "run_config", "a run_config member takes the name of the deprecated top-level field");
+  assert.equal(update?.flags.get("apps")?.type, "list");
+  assert.equal(update?.flags.get("scanning")?.deprecated, true);
   assert.equal(commands.get("questions update")?.flags.get("topic")?.nullable, true);
 });
