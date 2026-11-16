@@ -45,7 +45,7 @@ brew install frontmost-ai/tap/frontmost
 With npm (Node.js 22.12 or later):
 
 ```bash
-npm install -g github:frontmost-ai/cli
+npm install -g frontmost
 ```
 
 ## Sign in

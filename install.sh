@@ -10,7 +10,7 @@ set -eu
 
 repo=frontmost-ai/cli
 dir=${FRONTMOST_INSTALL_DIR:-$HOME/.frontmost/bin}
-npm_hint="Install with npm instead: npm install -g github:frontmost-ai/cli"
+npm_hint="Install with npm instead: npm install -g frontmost"
 
 fail() {
   printf 'Error: %s\n' "$1" >&2
