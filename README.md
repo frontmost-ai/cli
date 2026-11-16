@@ -28,6 +28,14 @@ Run `frontmost` with no command to see your latest scan. Each dot is one answer.
 
 ## Install
 
+On macOS or Linux:
+
+```bash
+curl -fsSL https://frontmost.ai/install | bash
+```
+
+The installer downloads one program for your system, checks its checksum, and puts it in `~/.frontmost/bin`. It needs nothing else.
+
 With Homebrew:
 
 ```bash

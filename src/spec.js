@@ -4,8 +4,11 @@ import { readFileSync } from "node:fs";
 /** @param {string} file */
 const read = (file) => JSON.parse(readFileSync(new URL(`../${file}`, import.meta.url), "utf8"));
 
-export const spec = read("openapi.json");
-export const VERSION = read("package.json").version;
+// A standalone binary has no files next to it. scripts/binary-entry.js embeds both files and sets this.
+const embedded = /** @type {{ spec: any, version: string } | undefined} */ (/** @type {any} */ (globalThis).__FRONTMOST_EMBED__);
+
+export const spec = embedded?.spec ?? read("openapi.json");
+export const VERSION = embedded?.version ?? read("package.json").version;
 
 /**
  * @typedef {{ name: string, key: string, in: "query" | "body" | "item", parent?: string, type: "string" | "integer" | "boolean" | "list", enum?: string[], deprecated?: boolean, nullable: boolean, default?: unknown, description: string }} Flag

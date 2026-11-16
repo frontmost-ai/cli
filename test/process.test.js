@@ -6,12 +6,13 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { KEY } from "./helpers.js";
 
-const BIN = fileURLToPath(new URL("../bin/frontmost.js", import.meta.url));
+// FRONTMOST_BIN runs these tests against a standalone binary, such as the one that install.sh downloads.
+const [EXE, ...PRE] = process.env.FRONTMOST_BIN ? [process.env.FRONTMOST_BIN] : [process.execPath, fileURLToPath(new URL("../bin/frontmost.js", import.meta.url))];
 
 /** @param {string[]} argv @param {Record<string, string>} env */
 const frontmost = (argv, env) =>
   new Promise((resolve) => {
-    execFile(process.execPath, [BIN, ...argv], { env: { PATH: process.env.PATH, HOME: "/nonexistent", ...env } }, (error, stdout, stderr) => resolve({ code: error ? error.code : 0, stdout, stderr }));
+    execFile(EXE, [...PRE, ...argv], { env: { PATH: process.env.PATH, HOME: "/nonexistent", ...env } }, (error, stdout, stderr) => resolve({ code: error ? error.code : 0, stdout, stderr }));
   });
 
 test("the program sends the key as a Bearer header and refuses redirects", async () => {
@@ -49,7 +50,7 @@ test("a closed pipe ends the program without an error", async () => {
   const server = createServer((_, res) => res.setHeader("content-type", "application/json").end(JSON.stringify({ object: "list", data: rows, has_more: false, next_cursor: null }))).listen(0, "127.0.0.1");
   await new Promise((ready) => server.once("listening", ready));
   const { port } = /** @type {import("node:net").AddressInfo} */ (server.address());
-  const child = spawn(process.execPath, [BIN, "api", "/projects/1/questions"], { env: { PATH: process.env.PATH, HOME: "/nonexistent", FRONTMOST_API_KEY: KEY, FRONTMOST_API_URL: `http://127.0.0.1:${port}/api/v1` }, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(EXE, [...PRE, "api", "/projects/1/questions"], { env: { PATH: process.env.PATH, HOME: "/nonexistent", FRONTMOST_API_KEY: KEY, FRONTMOST_API_URL: `http://127.0.0.1:${port}/api/v1` }, stdio: ["ignore", "pipe", "pipe"] });
   let stderr = "";
   child.stderr.on("data", (chunk) => (stderr += chunk));
   child.stdout.once("data", () => child.stdout.destroy());
