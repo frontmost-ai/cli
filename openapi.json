@@ -2176,7 +2176,31 @@
       },
       "Brief": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "project": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "url"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "project"
+        ],
         "additionalProperties": {},
         "description": "The same fields as the MCP tool get_brief"
       },
@@ -2230,7 +2254,31 @@
       },
       "Leaderboard": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "leaderboard": {
+            "type": "object",
+            "properties": {
+              "industry": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "industry",
+              "name",
+              "url"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "leaderboard"
+        ],
         "additionalProperties": {},
         "description": "The same fields as the MCP tool get_leaderboard"
       },
@@ -6980,9 +7028,9 @@
     "/projects/{id}/brief/rating": {
       "post": {
         "summary": "Say whether a brief was useful. A new rating replaces the earlier one",
-        "operationId": "rating.create",
+        "operationId": "brief.rate",
         "tags": [
-          "rating"
+          "brief"
         ],
         "security": [
           {
@@ -7120,9 +7168,9 @@
     "/projects/{id}/scans/{scan_id}/share": {
       "post": {
         "summary": "Email the scan's results with the PDF report to up to 10 people. Replies go to you",
-        "operationId": "share.create",
+        "operationId": "scans.share",
         "tags": [
-          "share"
+          "scans"
         ],
         "security": [
           {
@@ -7275,7 +7323,7 @@
     "/leaderboards": {
       "get": {
         "summary": "Frontmost AI's public leaderboards, by industry",
-        "operationId": "leaderboards.get",
+        "operationId": "leaderboards.list",
         "tags": [
           "leaderboards"
         ],
@@ -7364,7 +7412,7 @@
     "/leaderboards/{industry}": {
       "get": {
         "summary": "Which companies AI apps name most for an industry's buyer questions, from the latest weekly scan",
-        "operationId": "leaderboards.list",
+        "operationId": "leaderboards.get",
         "tags": [
           "leaderboards"
         ],
@@ -7526,7 +7574,7 @@
     "/industries": {
       "get": {
         "summary": "Find NAICS industries by plain words, such as dentist, or by code",
-        "operationId": "industries.get",
+        "operationId": "industries.search",
         "tags": [
           "industries"
         ],
