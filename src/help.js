@@ -1,6 +1,6 @@
 // Help text, made from the same command list that runs the commands.
 import { KEYS_URL } from "./config.js";
-import { commands, GLOBALS } from "./spec.js";
+import { commands, GLOBALS, OPTIONAL_ARGS } from "./spec.js";
 import { PLAIN } from "./style.js";
 
 const DOCS_URL = "https://app.frontmost.ai/docs/api.md";
@@ -27,7 +27,7 @@ Options
 /** @param {import("./spec.js").Command} c */
 export function usage(c) {
   const ownProject = c.path === "/projects/{id}";
-  const parts = [c.name, ...c.args.map((a) => `<${a.replaceAll("_", "-")}>`), ownProject ? "[project-id]" : "", c.positional?.label ?? ""];
+  const parts = [c.name, ...c.args.map((a) => (a in OPTIONAL_ARGS ? `[${a.replaceAll("_", "-")}]` : `<${a.replaceAll("_", "-")}>`)), ownProject ? "[project-id]" : "", c.positional?.label ?? ""];
   return parts.filter(Boolean).join(" ");
 }
 

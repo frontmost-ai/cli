@@ -8,7 +8,7 @@ import { home, welcome } from "./home.js";
 import { request } from "./http.js";
 import { accessToken, openBrowser, signIn } from "./oauth.js";
 import { clean, json, render } from "./output.js";
-import { commands, GLOBALS, VERSION } from "./spec.js";
+import { commands, GLOBALS, OPTIONAL_ARGS, VERSION } from "./spec.js";
 import { PLAIN, spinner, styleFor } from "./style.js";
 
 const SETUP_LIMIT_MS = 10 * 60_000;
@@ -302,7 +302,7 @@ async function execute(client, cmd, args, values, io) {
   // Arguments
   /** @type {Record<string, string>} */ const ids = {};
   for (const arg of cmd.args) {
-    const value = rest.shift();
+    const value = rest.shift() ?? OPTIONAL_ARGS[arg];
     if (value === undefined) throw wrong(`Missing <${arg.replaceAll("_", "-")}>.`);
     ids[arg] = value;
   }

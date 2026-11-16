@@ -16,7 +16,19 @@ export const VERSION = embedded?.version ?? read("package.json").version;
  */
 
 const VERBS = /** @type {Record<string, string>} */ ({ post: "add", patch: "update", delete: "remove" });
-const RENAMES = /** @type {Record<string, string>} */ ({ workspace: "whoami", "projects add": "projects create" });
+const RENAMES = /** @type {Record<string, string>} */ ({
+  workspace: "whoami",
+  "projects add": "projects create",
+  "projects remove": "projects delete",
+  "share add": "scans share",
+  "rating add": "brief rate",
+});
+
+/** A GET of one scan's tab, /projects/{id}/scans/{scan_id}/<tab>, is "scans <tab>", as the API names it scans.<tab>. */
+const scanTab = (/** @type {string} */ method, /** @type {string} */ path) => (method === "get" ? /\/scans\/\{scan_id\}\/([a-z]+)$/.exec(path)?.[1] : undefined);
+
+/** A path argument that a command can leave out, and the value it then sends. */
+export const OPTIONAL_ARGS = /** @type {Record<string, string>} */ ({ scan_id: "latest" });
 
 /** Body fields that a command also accepts without a flag name. */
 const POSITIONAL = /** @type {Record<string, { field: string, list?: string, label: string }>} */ ({
@@ -66,7 +78,8 @@ function command(method, path, op) {
   const noun = parts.findLast((p) => !p.startsWith("{")) ?? "";
   const verb = method === "get" ? (parts.at(-1)?.startsWith("{") ? "get" : "") : VERBS[method];
   const derived = verb ? `${noun} ${verb}` : noun;
-  const name = RENAMES[derived] ?? derived;
+  const tab = scanTab(method, path);
+  const name = tab ? `scans ${tab}` : (RENAMES[derived] ?? derived);
   const inProject = path.startsWith("/projects/{id}");
   const params = /** @type {any[]} */ (op.parameters ?? []);
   const body = op.requestBody?.content["application/json"].schema;

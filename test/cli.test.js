@@ -95,6 +95,13 @@ test("flags become query params", async () => {
   assert.deepEqual(r.requests[0].query, { scan_id: "5", named: "false", cited_domain: "g2.com", period: "week", limit: "3" });
 });
 
+test("a scan command with no scan ID reads the newest scan", async () => {
+  const one = async (/** @type {string[]} */ argv) => (await cli(["scans", ...argv, "--project", "7"], { answer: () => ({ body: { project: {} } }) })).requests[0];
+  assert.equal((await one(["questions"])).path, "/projects/7/scans/latest/questions");
+  assert.equal((await one(["sources", "42", "--domain", "g2.com"])).path, "/projects/7/scans/42/sources");
+  assert.equal((await one(["get"])).path, "/projects/7/scans/latest");
+});
+
 test("wrong input stops before any request, with exit code 2", async () => {
   const cases = [
     ["metrics", "--project", "7", "--period", "year"],

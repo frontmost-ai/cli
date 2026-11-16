@@ -69,6 +69,14 @@ frontmost whoami                 Your workspace, plan, and limits
 frontmost projects               Your projects
 frontmost projects get           One project
 frontmost scans                  Delivered scans, newest first
+frontmost scans get [scan-id]    The scan's Overview. With no scan ID, the newest scan
+frontmost scans questions        Each question's result per AI app, with 12 scans of history
+frontmost scans answers          The scan's answers. Takes every field of an answers_filter as a flag
+frontmost scans sources          Pages to get on, pages by Reach, and the most cited sites
+frontmost scans rivals           Every business that AI named, with history
+frontmost scans profiles         Each buyer profile against the top 5 rivals
+frontmost scans readiness        Whether each AI app can read your website, and what to fix
+frontmost scans queries          The web searches ChatGPT ran while it answered
 frontmost metrics                Visibility, Win Rate, Position, and Sentiment
 frontmost rivals                 Rivals that the answers named
 frontmost sources                Sites that the answers cited, with each site's channel
@@ -77,6 +85,11 @@ frontmost answers get <id>       One answer, with its text and citations
 frontmost questions              The questions that Frontmost AI asks
 frontmost profiles               Your buyer profiles
 frontmost recommendations        What to do next
+frontmost scorecard              Your Scorecard views, with a column per period
+frontmost brief                  The latest daily note and Weekly Deep Dive
+frontmost leaderboards           The public leaderboards, by industry
+frontmost leaderboards get <industry>  The companies AI apps name most in one industry
+frontmost industries --q <words> Find NAICS industries by plain words or by code
 ```
 
 **Change.** Needs a Read and Write key.
@@ -94,6 +107,10 @@ frontmost profiles remove <id>              Remove a buyer profile
 frontmost recommendations done <id>         Mark a recommendation done
 frontmost recommendations dismiss <id>      Dismiss a recommendation
 frontmost recommendations reopen <id>       Open a recommendation again
+frontmost scorecard update --body -         Save every Scorecard view, in tab order
+frontmost brief rate --brief-id <id> --useful   Say whether a brief was useful
+frontmost scans share --to <emails>         Email the newest scan's report to up to 10 people
+frontmost projects delete --confirm-name <name>  Delete a project. This cannot be undone
 ```
 
 `frontmost <command> --help` shows the options of one command.
@@ -118,6 +135,9 @@ frontmost questions add "Which CRM is best for agencies?" "Which CRM has the bes
 
 # Pause a question
 frontmost questions update 412 --no-active
+
+# Cited pages that list your rivals but not you, from the newest scan
+frontmost scans sources --questions unbranded --json
 ```
 
 ## Projects
