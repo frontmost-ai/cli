@@ -14,6 +14,8 @@ const BROWSER_WAIT_MS = 5 * 60_000;
 const REQUEST_TIMEOUT_MS = 30_000;
 /** Get a new access token this long before the old one expires. */
 const EARLY_MS = 60_000;
+/** An ended sign-in has the code that the API gives any credential it refuses, so a script handles both the same way. */
+const ENDED = { code: "invalid_key" };
 const DEVICE_GRANT = "urn:ietf:params:oauth:grant-type:device_code";
 const AGAIN = 'Run "frontmost login" again.';
 
@@ -198,9 +200,9 @@ export function accessToken(io, base) {
   /** @type {SignIn | undefined} */ let now;
   return async () => {
     now ??= readSignIn(io.env);
-    if (!now) throw new ApiError(`The saved sign-in is gone. ${AGAIN}`);
+    if (!now) throw new ApiError(`The saved sign-in is gone. ${AGAIN}`, ENDED);
     if (now.expires_at - EARLY_MS > Date.now()) return now.access_token;
-    if (!now.refresh_token) throw new ApiError(`Your sign-in ended. ${AGAIN}`);
+    if (!now.refresh_token) throw new ApiError(`Your sign-in ended. ${AGAIN}`, ENDED);
     const { ok, body } = await call(io, now.token_endpoint, { grant_type: "refresh_token", refresh_token: now.refresh_token, client_id: CLIENT_ID, resource: base });
     if (ok) {
       now = signInFrom(body, now);
@@ -210,7 +212,7 @@ export function accessToken(io, base) {
     // Each use replaces the saved sign-in. Another frontmost command can get there first, and then its copy is the good one.
     const other = readSignIn(io.env);
     if (other && other.refresh_token !== now.refresh_token && other.expires_at - EARLY_MS > Date.now()) return (now = other).access_token;
-    throw new ApiError(`Your sign-in ended. ${AGAIN}`);
+    throw new ApiError(`Your sign-in ended. ${AGAIN}`, ENDED);
   };
 }
 

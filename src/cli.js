@@ -117,7 +117,7 @@ export async function run(argv, io = realIo(argv.includes("--json"))) {
     if (!(e instanceof ApiError || e instanceof UsageError)) throw e;
     const wrongCommand = e instanceof UsageError;
     if (argv.includes("--json")) {
-      const body = e instanceof ApiError && e.body ? e.body : { error: { code: wrongCommand ? "usage" : "network", message: e.message } };
+      const body = e instanceof ApiError && e.body ? e.body : { error: { code: wrongCommand ? "usage" : (e instanceof ApiError && e.code) || "network", message: e.message } };
       io.note(json(body));
     } else {
       const s = io.noteStyle ?? PLAIN;

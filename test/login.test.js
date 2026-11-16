@@ -170,6 +170,12 @@ test("a sign-in that the server ended asks for a new login, and sends nothing to
   assert.ok(!r.requests.some((q) => q.host === "app.frontmost.ai"));
 });
 
+test("with --json, an ended sign-in has the code invalid_key, as the API gives for a refused key", async () => {
+  const r = await cli(["whoami", "--json"], { env: {}, home: signedIn({ expires_at: 0 }), answer: servers(() => ({ status: 400, body: { error: "invalid_grant" } })) });
+  assert.equal(r.code, 1);
+  assert.equal(JSON.parse(r.err).error.code, "invalid_key");
+});
+
 test("an API key that is set wins over the saved sign-in", async () => {
   const r = await cli(["whoami"], { env: { FRONTMOST_API_KEY: KEY }, home: signedIn({ expires_at: 0 }) });
   assert.deepEqual(r.requests.map((q) => q.headers.authorization), [`Bearer ${KEY}`]);
